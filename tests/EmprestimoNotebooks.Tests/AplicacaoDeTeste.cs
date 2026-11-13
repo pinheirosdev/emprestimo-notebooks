@@ -1,15 +1,20 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using EmprestimoNotebooks.Dados;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace EmprestimoNotebooks.Tests;
 
-internal class AplicacaoDeTeste(string caminhoDoBanco) : WebApplicationFactory<EmprestimosContexto>
+internal class AplicacaoDeTeste(string caminhoDoBanco, IInterceptor? interceptador = null) : WebApplicationFactory<EmprestimosContexto>
 {
     internal const string CampoToken = "__RequestVerificationToken";
     private const string UsuarioDeTeste = "atendente.teste";
@@ -50,6 +55,15 @@ internal class AplicacaoDeTeste(string caminhoDoBanco) : WebApplicationFactory<E
         var token = Regex.Match(html, """<input\b(?=[^>]*\bname\s*=\s*"__RequestVerificationToken")[^>]*\bvalue\s*=\s*"([^"]+)"[^>]*>""");
         Assert.True(token.Success, $"Formulário em {pagina} sem token antiforgery.");
         return WebUtility.HtmlDecode(token.Groups[1].Value);
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        if (interceptador is not null)
+        {
+            builder.ConfigureTestServices(servicos => servicos.ConfigureDbContext<EmprestimosContexto>(
+                opcoes => opcoes.AddInterceptors(interceptador)));
+        }
     }
 
     protected override IHost CreateHost(IHostBuilder builder)

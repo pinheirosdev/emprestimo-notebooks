@@ -16,7 +16,7 @@
                 <a class="marca" asp-controller="Notebooks" asp-action="Index">Empréstimo de Notebooks</a>
                 <div class="cabecalho-acoes">
                     <nav class="navegacao" aria-label="Navegação principal">
-                        <a asp-controller="Notebooks" asp-action="Index" aria-current="@(pagina == "Notebooks" ? "location" : null)">Inventário</a>
+                        <a asp-controller="Notebooks" asp-action="Index" aria-current="@(pagina is "Notebooks" or "Emprestimos" ? "location" : null)">Inventário</a>
                         <a asp-controller="Alunos" asp-action="Index" aria-current="@(pagina == "Alunos" ? "location" : null)">Alunos</a>
                     </nav>
                     <form asp-controller="Atendente" asp-action="Sair" method="post">

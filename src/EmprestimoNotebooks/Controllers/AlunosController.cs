@@ -1,4 +1,3 @@
-using System.Globalization;
 using EmprestimoNotebooks.Dados;
 using EmprestimoNotebooks.Dominio;
 using EmprestimoNotebooks.Models;
@@ -13,26 +12,12 @@ namespace EmprestimoNotebooks.Controllers;
 public class AlunosController(EmprestimosContexto contexto) : Controller
 {
     private const int RestricaoUnicaSqlite = 2067;
-    private static readonly CompareInfo ComparacaoDeNomes = CultureInfo.GetCultureInfo("pt-BR").CompareInfo;
 
     [HttpGet("/alunos")]
     public async Task<IActionResult> Index(string? busca, CancellationToken cancelamento)
     {
-        var alunos = await contexto.Alunos.AsNoTracking()
-            .OrderBy(aluno => aluno.NomeCompleto).ThenBy(aluno => aluno.Matricula)
-            .Select(aluno => new AlunoResumo(aluno.Id, aluno.NomeCompleto, aluno.Matricula, aluno.Turma))
-            .ToListAsync(cancelamento);
-
-        var termo = busca?.Trim();
-        if (!string.IsNullOrEmpty(termo))
-        {
-            alunos = alunos.Where(aluno => ComparacaoDeNomes.IndexOf(aluno.NomeCompleto, termo,
-                    CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0
-                || aluno.Matricula.Contains(termo, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
-
-        ViewData["Busca"] = termo;
-        return View(alunos);
+        ViewData["Busca"] = busca?.Trim();
+        return View(await ConsultaAlunos.Listar(contexto, busca, cancelamento));
     }
 
     [HttpGet("/alunos/cadastrar")]

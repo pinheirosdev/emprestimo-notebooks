@@ -1,31 +1,16 @@
 using System.Net;
-using System.Net.Http.Headers;
 using EmprestimoNotebooks.Dados;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using static EmprestimoNotebooks.Tests.AplicacaoDeTeste;
+using static EmprestimoNotebooks.Tests.FotosDeTeste;
 
 namespace EmprestimoNotebooks.Tests;
 
 public class AlunosTestes : IDisposable
 {
     private const string Cadastro = "/alunos/cadastrar";
-    private const string JpegSintetico = """
-        /9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsK
-        CwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQU
-        FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAACAAIDASIA
-        AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQA
-        AAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3
-        ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWm
-        p6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEA
-        AwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSEx
-        BhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElK
-        U1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3
-        uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDS+EXw
-        i8C+JvhR4L1jWPBfh7VtX1DRLK7vL++0qCae5mkgRpJZJGQs7sxLFiSSSSaKKK/Ccb/vVX/E/wA2
-        fo2H/gw9F+R//9k=
-        """;
 
     private readonly string _caminhoDoBanco = Path.Combine(Path.GetTempPath(), $"alunos-testes-{Guid.NewGuid():N}.db");
 
@@ -160,12 +145,7 @@ public class AlunosTestes : IDisposable
             { new StringContent("Turma 1"), "Turma" }
         };
 
-        if (foto is not null)
-        {
-            var arquivo = new ByteArrayContent(Convert.FromBase64String(foto));
-            arquivo.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-            formulario.Add(arquivo, "Foto", "foto.jpg");
-        }
+        AnexarFoto(formulario, foto);
 
         return await cliente.PostAsync(Cadastro, formulario, TestContext.Current.CancellationToken);
     }

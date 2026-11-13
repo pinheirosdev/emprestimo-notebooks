@@ -6,6 +6,7 @@ const statusCamera = camera.querySelector('[role="status"]');
 const abrirCamera = camera.querySelector("[data-abrir-camera]");
 const tirarFoto = camera.querySelector("[data-tirar-foto]");
 const salvar = arquivo.form.querySelector('button[type="submit"]');
+const aluno = arquivo.form.querySelector("[data-camera-aluno]");
 
 let fluxo;
 let enderecoFoto;
@@ -125,17 +126,20 @@ tirarFoto.addEventListener("click", () => {
     }, "image/jpeg", 0.85);
 });
 
-window.addEventListener("pagehide", () => {
+function reiniciarCamera() {
     sessao++;
     pararCamera();
     limparFoto();
-    abrirCamera.disabled = false;
     abrirCamera.hidden = !capturaDisponivel;
-    statusCamera.textContent = "";
-});
+    abrirCamera.disabled = aluno !== null && !aluno.value;
+    statusCamera.textContent = abrirCamera.disabled ? "Selecione o aluno para abrir a câmera." : "";
+}
+
+window.addEventListener("pagehide", reiniciarCamera);
 
 if (capturaDisponivel) {
-    abrirCamera.hidden = false;
+    aluno?.addEventListener("change", reiniciarCamera);
+    reiniciarCamera();
 } else {
     statusCamera.textContent = window.isSecureContext
         ? "Este navegador não oferece suporte à captura pela câmera."

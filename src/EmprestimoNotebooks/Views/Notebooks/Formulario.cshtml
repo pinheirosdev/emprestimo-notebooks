@@ -28,10 +28,13 @@
         <span asp-validation-for="Modelo" id="erro-modelo"></span>
     </div>
 
-    <label class="campo-opcao" asp-for="EmManutencao">
-        <input asp-for="EmManutencao">
-        Em manutenção
-    </label>
+    <div class="campo">
+        <label class="campo-opcao" asp-for="EmManutencao">
+            <input asp-for="EmManutencao" aria-describedby="erro-manutencao">
+            Em manutenção
+        </label>
+        <span asp-validation-for="EmManutencao" id="erro-manutencao"></span>
+    </div>
 
     <div class="formulario-acoes">
         <button class="botao" type="submit">Salvar notebook</button>

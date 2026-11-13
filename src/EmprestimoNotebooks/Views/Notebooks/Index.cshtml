@@ -1,8 +1,9 @@
-@model IReadOnlyList<EmprestimoNotebooks.Dominio.Notebook>
+@model IReadOnlyList<EmprestimoNotebooks.Models.NotebookResumo>
 
 @{
     ViewData["Title"] = "Inventário de notebooks";
-    var emManutencao = Model.Count(notebook => notebook.EmManutencao);
+    var disponiveis = Model.Count(notebook => !notebook.Emprestado && !notebook.EmManutencao);
+    var emprestados = Model.Count(notebook => notebook.Emprestado);
 }
 
 <div class="titulo-acoes">
@@ -22,11 +23,15 @@
     </div>
     <div>
         <dt>Disponíveis</dt>
-        <dd>@(Model.Count - emManutencao)</dd>
+        <dd>@disponiveis</dd>
+    </div>
+    <div>
+        <dt>Emprestados</dt>
+        <dd>@emprestados</dd>
     </div>
     <div>
         <dt>Em manutenção</dt>
-        <dd>@emManutencao</dd>
+        <dd>@(Model.Count - disponiveis - emprestados)</dd>
     </div>
 </dl>
 
@@ -36,14 +41,14 @@
 }
 else
 {
-    <table class="inventario">
+    <table class="inventario tabela-notebooks">
         <caption class="visualmente-oculto">Notebooks cadastrados</caption>
         <thead>
             <tr>
                 <th scope="col">Patrimônio</th>
                 <th scope="col">Marca e modelo</th>
                 <th scope="col">Situação</th>
-                <th scope="col">Ação</th>
+                <th scope="col">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -53,12 +58,27 @@ else
                     <th scope="row">@notebook.Patrimonio</th>
                     <td>@notebook.Marca @notebook.Modelo</td>
                     <td>
-                        <span class="situacao @(notebook.EmManutencao ? "manutencao" : "disponivel")">
-                            @(notebook.EmManutencao ? "Em manutenção" : "Disponível")
-                        </span>
+                        @if (notebook.Emprestado)
+                        {
+                            <span class="situacao emprestado">Emprestado</span>
+                        }
+                        else if (notebook.EmManutencao)
+                        {
+                            <span class="situacao manutencao">Em manutenção</span>
+                        }
+                        else
+                        {
+                            <span class="situacao disponivel">Disponível</span>
+                        }
                     </td>
                     <td>
-                        <a class="acao-tabela" asp-action="Editar" asp-route-id="@notebook.Id" aria-label="Editar notebook @notebook.Patrimonio">Editar</a>
+                        <div class="acoes-notebook">
+                            @if (!notebook.Emprestado && !notebook.EmManutencao)
+                            {
+                                <a class="acao-tabela" asp-controller="Emprestimos" asp-action="Retirar" asp-route-id="@notebook.Id" aria-label="Retirar notebook @notebook.Patrimonio">Retirar</a>
+                            }
+                            <a class="acao-tabela" asp-action="Editar" asp-route-id="@notebook.Id" aria-label="Editar notebook @notebook.Patrimonio">Editar</a>
+                        </div>
                     </td>
                 </tr>
             }
