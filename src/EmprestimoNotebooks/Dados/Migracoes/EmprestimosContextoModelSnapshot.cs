@@ -26,6 +26,37 @@ namespace EmprestimoNotebooks.Dados.Migracoes
                     b.ToTable("ControleCarga", (string)null);
                 });
 
+            modelBuilder.Entity("EmprestimoNotebooks.Dominio.Aluno", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("FotoJpeg")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("Matricula")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<string>("NomeCompleto")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Turma")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Matricula")
+                        .IsUnique();
+
+                    b.ToTable("Alunos");
+                });
+
             modelBuilder.Entity("EmprestimoNotebooks.Dominio.Notebook", b =>
                 {
                     b.Property<int>("Id")

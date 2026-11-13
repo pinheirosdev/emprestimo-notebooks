@@ -12,10 +12,17 @@
         <div class="largura cabecalho-conteudo">
             @if (User.Identity?.IsAuthenticated == true)
             {
+                var pagina = ViewContext.RouteData.Values["controller"]?.ToString();
                 <a class="marca" asp-controller="Notebooks" asp-action="Index">Empréstimo de Notebooks</a>
-                <form asp-controller="Atendente" asp-action="Sair" method="post">
-                    <button class="botao botao-secundario" type="submit">Sair</button>
-                </form>
+                <div class="cabecalho-acoes">
+                    <nav class="navegacao" aria-label="Navegação principal">
+                        <a asp-controller="Notebooks" asp-action="Index" aria-current="@(pagina == "Notebooks" ? "location" : null)">Inventário</a>
+                        <a asp-controller="Alunos" asp-action="Index" aria-current="@(pagina == "Alunos" ? "location" : null)">Alunos</a>
+                    </nav>
+                    <form asp-controller="Atendente" asp-action="Sair" method="post">
+                        <button class="botao botao-secundario" type="submit">Sair</button>
+                    </form>
+                </div>
             }
             else
             {
@@ -26,5 +33,6 @@
     <main class="largura conteudo" id="conteudo" tabindex="-1">
         @RenderBody()
     </main>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

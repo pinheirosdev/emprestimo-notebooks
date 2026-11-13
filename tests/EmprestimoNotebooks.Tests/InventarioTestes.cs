@@ -1,22 +1,15 @@
 using System.Net;
-using System.Text.RegularExpressions;
 using EmprestimoNotebooks.Dados;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Xunit;
+using static EmprestimoNotebooks.Tests.AplicacaoDeTeste;
 
 namespace EmprestimoNotebooks.Tests;
 
 public class InventarioTestes : IDisposable
 {
-    private const string UsuarioDeTeste = "atendente.teste";
-    private const string SenhaDeTeste = "Senha-apenas-dos-testes";
     private const string Cadastro = "/notebooks/cadastrar";
-    private const string CampoToken = "__RequestVerificationToken";
 
     private readonly string _caminhoDoBanco = Path.Combine(Path.GetTempPath(), $"notebooks-testes-{Guid.NewGuid():N}.db");
 
@@ -209,33 +202,6 @@ public class InventarioTestes : IDisposable
 
     public void Dispose() => File.Delete(_caminhoDoBanco);
 
-    private static void AssertRedirecionaParaEntrar(HttpClient cliente, HttpResponseMessage resposta)
-    {
-        Assert.Equal(HttpStatusCode.Redirect, resposta.StatusCode);
-        Assert.NotNull(resposta.Headers.Location);
-        Assert.Equal("/entrar", new Uri(cliente.BaseAddress!, resposta.Headers.Location).AbsolutePath);
-    }
-
-    private static Task<HttpResponseMessage> EntrarAsync(HttpClient cliente, string senha = SenhaDeTeste, string retorno = "") =>
-        EnviarFormularioAsync(cliente, "/entrar", "/entrar", new Dictionary<string, string>
-        {
-            ["Usuario"] = UsuarioDeTeste,
-            ["Senha"] = senha,
-            ["Retorno"] = retorno
-        });
-
-    private static async Task<HttpResponseMessage> EnviarFormularioAsync(HttpClient cliente, string pagina, string destino, Dictionary<string, string> campos)
-    {
-        var cancelamento = TestContext.Current.CancellationToken;
-        var html = await cliente.GetStringAsync(pagina, cancelamento);
-        var token = Regex.Match(html, """<input\b(?=[^>]*\bname\s*=\s*"__RequestVerificationToken")[^>]*\bvalue\s*=\s*"([^"]+)"[^>]*>""");
-        Assert.True(token.Success, $"Formulário em {pagina} sem token antiforgery.");
-
-        campos[CampoToken] = WebUtility.HtmlDecode(token.Groups[1].Value);
-        using var conteudo = new FormUrlEncodedContent(campos);
-        return await cliente.PostAsync(destino, conteudo, cancelamento);
-    }
-
     private static Dictionary<string, string> CamposDoNotebook(string patrimonio) => new()
     {
         ["Patrimonio"] = patrimonio,
@@ -243,32 +209,4 @@ public class InventarioTestes : IDisposable
         ["Modelo"] = "Latitude 3440",
         ["EmManutencao"] = "false"
     };
-
-    private class AplicacaoDeTeste(string caminhoDoBanco) : WebApplicationFactory<EmprestimosContexto>
-    {
-        internal HttpClient CriarCliente() => CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-            BaseAddress = new Uri("https://localhost")
-        });
-
-        protected override IHost CreateHost(IHostBuilder builder)
-        {
-            var conexao = new SqliteConnectionStringBuilder
-            {
-                DataSource = caminhoDoBanco,
-                Pooling = false
-            };
-
-            builder.ConfigureHostConfiguration(configuracao => configuracao.AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Emprestimos"] = conexao.ToString(),
-                    ["Atendente:Usuario"] = UsuarioDeTeste,
-                    ["Atendente:Senha"] = SenhaDeTeste
-                }));
-
-            return base.CreateHost(builder);
-        }
-    }
 }
