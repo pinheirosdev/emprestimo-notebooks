@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.planning/
+artifacts/
+TestResults/
+*.db
+*.db-*
+*.user
+*.md
+!/README.md

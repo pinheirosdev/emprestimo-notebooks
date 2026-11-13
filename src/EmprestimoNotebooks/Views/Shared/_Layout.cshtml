@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] | Empréstimo de Notebooks</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+</head>
+<body>
+    <a class="atalho" href="#conteudo">Ir para o conteúdo</a>
+    <header class="cabecalho">
+        <div class="largura">
+            <a class="marca" asp-controller="Notebooks" asp-action="Index">Empréstimo de Notebooks</a>
+        </div>
+    </header>
+    <main class="largura conteudo" id="conteudo" tabindex="-1">
+        @RenderBody()
+    </main>
+</body>
+</html>

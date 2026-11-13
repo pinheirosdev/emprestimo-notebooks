@@ -1,0 +1,205 @@
+:root {
+    color-scheme: light;
+    font-family: system-ui, sans-serif;
+    color: #18243a;
+    background: #f4f6fa;
+    line-height: 1.5;
+}
+
+body {
+    margin: 0;
+}
+
+:focus-visible {
+    outline: 3px solid #3452ac;
+    outline-offset: 4px;
+}
+
+.atalho {
+    position: fixed;
+    z-index: 1;
+    top: 1rem;
+    left: 1rem;
+    padding: .5rem 1rem;
+    background: #fff;
+    color: #233979;
+    transform: translateY(-200%);
+}
+
+.atalho:focus {
+    transform: none;
+}
+
+.largura {
+    box-sizing: border-box;
+    max-width: 68rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+.cabecalho {
+    padding-block: 1.125rem;
+    border-bottom: 1px solid #dbe2ed;
+    background: #fff;
+}
+
+.marca {
+    display: inline-block;
+    padding-inline-start: .75rem;
+    border-inline-start: .25rem solid #3452ac;
+    color: #243874;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.conteudo {
+    padding-block: clamp(1.75rem, 6vw, 4rem);
+}
+
+h1 {
+    margin: 0 0 1.5rem;
+    font-size: clamp(1.65rem, 4vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -.035em;
+    text-wrap: balance;
+}
+
+.resumo {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(.375rem, 2vw, 1rem);
+    margin: 0 0 1.5rem;
+}
+
+.resumo > div {
+    min-width: 0;
+    padding: clamp(.5rem, 2.6vw, 1.25rem);
+    border: 1px solid #dbe2ed;
+    border-radius: .75rem;
+    background: #fff;
+    overflow-wrap: anywhere;
+}
+
+.resumo dt {
+    color: #495870;
+    font-size: .875rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.resumo dd {
+    margin: .25rem 0 0;
+    font-size: clamp(1.45rem, 4vw, 2rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.inventario,
+.vazio {
+    border: 1px solid #dbe2ed;
+    border-radius: .75rem;
+    background: #fff;
+}
+
+.inventario {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    overflow: hidden;
+}
+
+.inventario th,
+.inventario td {
+    padding: .85rem clamp(.45rem, 2.6vw, 1.25rem);
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+
+.inventario thead th {
+    border-bottom: 1px solid #dbe2ed;
+    background: #eaf0f7;
+    color: #344259;
+    font-size: .875rem;
+    font-weight: 650;
+}
+
+.inventario thead th:first-child {
+    width: 26%;
+}
+
+.inventario thead th:last-child {
+    width: 32%;
+}
+
+.inventario tbody tr + tr > * {
+    border-top: 1px solid #e2e8f1;
+}
+
+.inventario tbody th {
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.situacao {
+    display: inline-block;
+    padding: .2rem .55rem;
+    border-radius: .5rem;
+    font-size: .8125rem;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+.disponivel {
+    background: #e5f4eb;
+    color: #215739;
+}
+
+.manutencao {
+    background: #fff0d6;
+    color: #724909;
+}
+
+.vazio {
+    margin: 0;
+    padding: 1.25rem;
+    color: #495870;
+}
+
+.visualmente-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@media (max-width: 32rem) {
+    .resumo > div {
+        padding: .45rem;
+    }
+
+    .resumo dt {
+        font-size: .8125rem;
+    }
+
+    .inventario th,
+    .inventario td {
+        padding: .65rem .4rem;
+        font-size: .8125rem;
+    }
+
+    .inventario thead th:first-child {
+        width: 25%;
+    }
+
+    .inventario thead th:last-child {
+        width: 28%;
+    }
+
+    .situacao {
+        padding-inline: .35rem;
+    }
+}

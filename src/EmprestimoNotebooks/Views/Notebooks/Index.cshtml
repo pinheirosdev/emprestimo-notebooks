@@ -1,0 +1,55 @@
+@model IReadOnlyList<EmprestimoNotebooks.Dominio.Notebook>
+
+@{
+    ViewData["Title"] = "Inventário de notebooks";
+    var emManutencao = Model.Count(notebook => notebook.EmManutencao);
+}
+
+<h1>Inventário de notebooks</h1>
+
+<dl class="resumo">
+    <div>
+        <dt>Total</dt>
+        <dd>@Model.Count</dd>
+    </div>
+    <div>
+        <dt>Disponíveis</dt>
+        <dd>@(Model.Count - emManutencao)</dd>
+    </div>
+    <div>
+        <dt>Em manutenção</dt>
+        <dd>@emManutencao</dd>
+    </div>
+</dl>
+
+@if (Model.Count == 0)
+{
+    <p class="vazio">Nenhum notebook cadastrado.</p>
+}
+else
+{
+    <table class="inventario">
+        <caption class="visualmente-oculto">Notebooks cadastrados</caption>
+        <thead>
+            <tr>
+                <th scope="col">Patrimônio</th>
+                <th scope="col">Equipamento</th>
+                <th scope="col">Situação</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var notebook in Model)
+            {
+                <tr>
+                    <th scope="row">@notebook.Patrimonio</th>
+                    <td>@notebook.Marca @notebook.Modelo</td>
+                    <td>
+                        <span class="situacao @(notebook.EmManutencao ? "manutencao" : "disponivel")">
+                            @(notebook.EmManutencao ? "Em manutenção" : "Disponível")
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
