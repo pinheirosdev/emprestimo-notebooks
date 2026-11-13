@@ -38,9 +38,23 @@ body {
 }
 
 .cabecalho {
-    padding-block: 1.125rem;
+    padding-block: .625rem;
     border-bottom: 1px solid #dbe2ed;
     background: #fff;
+}
+
+.cabecalho-conteudo,
+.titulo-acoes,
+.formulario-acoes {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.cabecalho-conteudo,
+.titulo-acoes {
+    justify-content: space-between;
 }
 
 .marca {
@@ -50,6 +64,10 @@ body {
     color: #243874;
     font-weight: 700;
     text-decoration: none;
+}
+
+a.marca:hover {
+    text-decoration: underline;
 }
 
 .conteudo {
@@ -62,6 +80,67 @@ h1 {
     line-height: 1.2;
     letter-spacing: -.035em;
     text-wrap: balance;
+}
+
+.titulo-acoes {
+    margin-bottom: 1.5rem;
+}
+
+.titulo-acoes h1 {
+    margin: 0;
+}
+
+.botao,
+.acao-tabela {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    box-sizing: border-box;
+    font: inherit;
+    font-weight: 650;
+    text-decoration: none;
+    touch-action: manipulation;
+}
+
+.botao {
+    padding: .5rem .9rem;
+    border: 1px solid transparent;
+    border-radius: .5rem;
+    background: #3452ac;
+    color: #fff;
+    cursor: pointer;
+}
+
+.botao:hover {
+    background: #243874;
+}
+
+.botao-secundario {
+    border-color: #ccd6e6;
+    background: #fff;
+    color: #243874;
+}
+
+.botao-secundario:hover {
+    border-color: #3452ac;
+    background: #eaf0f7;
+}
+
+.acao-tabela {
+    min-width: 2.75rem;
+    color: #243874;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+
+.acao-tabela:hover {
+    color: #18243a;
+    text-decoration-thickness: .12em;
+}
+
+.acao-tabela:focus-visible {
+    outline-offset: -2px;
 }
 
 .resumo {
@@ -112,6 +191,7 @@ h1 {
 
 .inventario th,
 .inventario td {
+    box-sizing: border-box;
     padding: .85rem clamp(.45rem, 2.6vw, 1.25rem);
     text-align: start;
     overflow-wrap: anywhere;
@@ -126,11 +206,15 @@ h1 {
 }
 
 .inventario thead th:first-child {
-    width: 26%;
+    width: 24%;
+}
+
+.inventario thead th:nth-child(3) {
+    width: 24%;
 }
 
 .inventario thead th:last-child {
-    width: 32%;
+    width: 15%;
 }
 
 .inventario tbody tr + tr > * {
@@ -140,6 +224,10 @@ h1 {
 .inventario tbody th {
     font-weight: 650;
     font-variant-numeric: tabular-nums;
+}
+
+.inventario td:last-child {
+    padding-block: 0;
 }
 
 .situacao {
@@ -167,6 +255,100 @@ h1 {
     color: #495870;
 }
 
+.mensagem {
+    margin: 0 0 1.5rem;
+    padding: .75rem 1rem;
+    border-radius: .5rem;
+    background: #e5f4eb;
+    color: #215739;
+}
+
+.formulario {
+    display: grid;
+    box-sizing: border-box;
+    max-width: 35rem;
+    gap: 1.125rem;
+    padding: clamp(1rem, 4vw, 1.75rem);
+    border: 1px solid #dbe2ed;
+    border-radius: .75rem;
+    background: #fff;
+}
+
+.formulario-entrar {
+    max-width: 28rem;
+    margin-inline: auto;
+}
+
+.formulario-entrar h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.campo {
+    display: grid;
+    gap: .375rem;
+}
+
+.campo label {
+    font-weight: 650;
+}
+
+.campo input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: .55rem .75rem;
+    border: 1px solid #7c8ba4;
+    border-radius: .5rem;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+}
+
+.campo .input-validation-error {
+    border-color: #9c2c31;
+}
+
+.campo-opcao {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    min-height: 2.75rem;
+    width: fit-content;
+    cursor: pointer;
+}
+
+.campo-opcao input {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    accent-color: #3452ac;
+}
+
+.formulario-acoes {
+    padding-top: .25rem;
+}
+
+.field-validation-valid {
+    display: none;
+}
+
+.validation-summary-errors,
+.field-validation-error {
+    color: #9c2c31;
+}
+
+.validation-summary-errors {
+    padding: .625rem .875rem;
+    border-radius: .5rem;
+    background: #fff0f0;
+}
+
+.validation-summary-errors ul {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+}
+
 .visualmente-oculto {
     position: absolute;
     width: 1px;
@@ -187,19 +369,23 @@ h1 {
 
     .inventario th,
     .inventario td {
-        padding: .65rem .4rem;
+        padding: .65rem .3rem;
         font-size: .8125rem;
     }
 
     .inventario thead th:first-child {
-        width: 25%;
+        width: 5rem;
+    }
+
+    .inventario thead th:nth-child(3) {
+        width: 5.5rem;
     }
 
     .inventario thead th:last-child {
-        width: 28%;
+        width: 3.5rem;
     }
 
     .situacao {
-        padding-inline: .35rem;
+        padding-inline: .2rem;
     }
 }

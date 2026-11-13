@@ -1,0 +1,40 @@
+@model EmprestimoNotebooks.Models.NotebookFormulario
+
+@{
+    var editando = Model.Id.HasValue;
+    var titulo = editando ? "Editar notebook" : "Cadastrar notebook";
+    var acao = editando ? "Editar" : "Cadastrar";
+    ViewData["Title"] = titulo;
+}
+
+<h1>@titulo</h1>
+
+<form class="formulario" asp-action="@acao" asp-route-id="@Model.Id" method="post" autocomplete="off">
+    <div class="campo">
+        <label asp-for="Patrimonio"></label>
+        <input asp-for="Patrimonio" spellcheck="false" required aria-describedby="erro-patrimonio">
+        <span asp-validation-for="Patrimonio" id="erro-patrimonio"></span>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Marca"></label>
+        <input asp-for="Marca" required aria-describedby="erro-marca">
+        <span asp-validation-for="Marca" id="erro-marca"></span>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Modelo"></label>
+        <input asp-for="Modelo" required aria-describedby="erro-modelo">
+        <span asp-validation-for="Modelo" id="erro-modelo"></span>
+    </div>
+
+    <label class="campo-opcao" asp-for="EmManutencao">
+        <input asp-for="EmManutencao">
+        Em manutenção
+    </label>
+
+    <div class="formulario-acoes">
+        <button class="botao" type="submit">Salvar notebook</button>
+        <a class="botao botao-secundario" asp-action="Index">Cancelar</a>
+    </div>
+</form>

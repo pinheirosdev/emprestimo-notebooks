@@ -9,8 +9,18 @@
 <body>
     <a class="atalho" href="#conteudo">Ir para o conteúdo</a>
     <header class="cabecalho">
-        <div class="largura">
-            <a class="marca" asp-controller="Notebooks" asp-action="Index">Empréstimo de Notebooks</a>
+        <div class="largura cabecalho-conteudo">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="marca" asp-controller="Notebooks" asp-action="Index">Empréstimo de Notebooks</a>
+                <form asp-controller="Atendente" asp-action="Sair" method="post">
+                    <button class="botao botao-secundario" type="submit">Sair</button>
+                </form>
+            }
+            else
+            {
+                <span class="marca">Empréstimo de Notebooks</span>
+            }
         </div>
     </header>
     <main class="largura conteudo" id="conteudo" tabindex="-1">
