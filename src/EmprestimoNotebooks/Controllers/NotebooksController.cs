@@ -13,7 +13,7 @@ public class NotebooksController(EmprestimosContexto contexto) : Controller
     private const int RestricaoUnicaSqlite = 2067;
 
     [HttpGet("/")]
-    public async Task<IActionResult> Index(CancellationToken cancelamento)
+    public async Task<IActionResult> Index(int pagina, CancellationToken cancelamento)
     {
         var notebooks = await contexto.Notebooks
             .AsNoTracking()
@@ -23,7 +23,11 @@ public class NotebooksController(EmprestimosContexto contexto) : Controller
                     .Select(emprestimo => (int?)emprestimo.Id).FirstOrDefault()))
             .ToListAsync(cancelamento);
 
-        return View(notebooks);
+        var emprestados = notebooks.Count(notebook => notebook.Emprestado);
+        var emManutencao = notebooks.Count(notebook => !notebook.Emprestado && notebook.EmManutencao);
+        var disponiveis = notebooks.Count - emprestados - emManutencao;
+        return View(new InventarioFormulario(Pagina<NotebookResumo>.Criar(notebooks, pagina, 10),
+            disponiveis, emprestados, emManutencao));
     }
 
     [HttpGet("/notebooks/cadastrar")]

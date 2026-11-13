@@ -1,0 +1,14 @@
+**
+!Dockerfile
+!src/
+!src/EmprestimoNotebooks/
+!src/EmprestimoNotebooks/**
+**/bin
+**/obj
+**/*.db
+**/*.db-*
+**/.env
+**/.env.*
+**/*.user
+**/*.pfx
+**/appsettings.Development.json

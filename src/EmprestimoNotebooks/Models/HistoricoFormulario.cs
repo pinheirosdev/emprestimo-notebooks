@@ -1,7 +1,7 @@
 namespace EmprestimoNotebooks.Models;
 
-public record HistoricoFormulario(string Mes, string TituloMes, IReadOnlyList<MovimentacaoResumo> Movimentacoes,
-    IReadOnlyList<EmprestimoAbertoResumo> EmAberto, IReadOnlyList<EventoCadastroResumo> Eventos);
+public record HistoricoFormulario(string Mes, string TituloMes, Pagina<MovimentacaoResumo> Movimentacoes,
+    Pagina<EmprestimoAbertoResumo> EmAberto, Pagina<EventoCadastroResumo> Eventos);
 
 public record MovimentacaoResumo(int EmprestimoId, string Patrimonio, string NomeCompleto, string Matricula,
     DateTime DataLocal, bool Devolucao, string? Observacao, bool TemFotoNotebook);

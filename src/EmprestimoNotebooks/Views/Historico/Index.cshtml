@@ -2,6 +2,34 @@
 
 @{
     ViewData["Title"] = "Histórico";
+
+    int? PaginaNaUrl(int pagina) => pagina > 1 ? pagina : null;
+
+    string? Link(int paginaAbertos, int paginaMovimentacoes, int paginaEventos) =>
+        Url.Action("Index", new
+        {
+            mes = Model.Mes,
+            paginaAbertos = PaginaNaUrl(paginaAbertos),
+            paginaMovimentacoes = PaginaNaUrl(paginaMovimentacoes),
+            paginaEventos = PaginaNaUrl(paginaEventos)
+        });
+
+    var abertos = Model.EmAberto;
+    var movimentos = Model.Movimentacoes;
+    var eventos = Model.Eventos;
+    var paginaAbertos = PaginaNaUrl(abertos.Atual);
+    var paginaMovimentacoes = PaginaNaUrl(movimentos.Atual);
+    var paginaEventos = PaginaNaUrl(eventos.Atual);
+
+    var navegacaoAbertos = new EmprestimoNotebooks.Models.NavegacaoPagina(abertos.Atual, abertos.TotalPaginas,
+        "Paginação dos empréstimos em aberto",
+        numero => Link(numero, movimentos.Atual, eventos.Atual));
+    var navegacaoMovimentos = new EmprestimoNotebooks.Models.NavegacaoPagina(movimentos.Atual, movimentos.TotalPaginas,
+        "Paginação das movimentações",
+        numero => Link(abertos.Atual, numero, eventos.Atual));
+    var navegacaoEventos = new EmprestimoNotebooks.Models.NavegacaoPagina(eventos.Atual, eventos.TotalPaginas,
+        "Paginação de cadastros e manutenção",
+        numero => Link(abertos.Atual, movimentos.Atual, numero));
 }
 
 <h1>Histórico</h1>
@@ -14,9 +42,9 @@
     <button class="botao botao-secundario" type="submit">Filtrar</button>
 </form>
 
-<section class="historico-secao" aria-labelledby="em-aberto">
+<section class="historico-secao" aria-labelledby="em-aberto" data-paginacao="paginaAbertos" data-pagina-atual="@abertos.Atual">
     <h2 id="em-aberto">Empréstimos em aberto</h2>
-    @if (Model.EmAberto.Count == 0)
+    @if (abertos.Itens.Count == 0)
     {
         <p class="vazio">Nenhum empréstimo em aberto.</p>
     }
@@ -32,7 +60,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var emprestimo in Model.EmAberto)
+                @foreach (var emprestimo in abertos.Itens)
                 {
                     <tr>
                         <th scope="row">@emprestimo.Patrimonio</th>
@@ -43,12 +71,13 @@
                 }
             </tbody>
         </table>
+        <partial name="_Paginacao" model="navegacaoAbertos" />
     }
 </section>
 
-<section class="historico-secao" aria-labelledby="movimentacoes">
+<section class="historico-secao" aria-labelledby="movimentacoes" data-paginacao="paginaMovimentacoes" data-pagina-atual="@movimentos.Atual">
     <h2 id="movimentacoes">Movimentações de @Model.TituloMes</h2>
-    @if (Model.Movimentacoes.Count == 0)
+    @if (movimentos.Itens.Count == 0)
     {
         <p class="vazio">Nenhuma movimentação no mês selecionado.</p>
     }
@@ -64,7 +93,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model.Movimentacoes)
+                @foreach (var item in movimentos.Itens)
                 {
                     var tipo = item.Devolucao ? "devolucao" : "retirada";
                     var tipoFotoNotebook = item.Devolucao ? "notebook" : "notebook-retirada";
@@ -77,10 +106,14 @@
                             <div class="historico-movimentacao">
                                 <strong>@acao</strong>
                                 <div class="acoes-tabela">
-                                    <a class="acao-tabela" asp-action="VerFoto" asp-route-id="@item.EmprestimoId" asp-route-tipo="@tipo" asp-route-mes="@Model.Mes" aria-label="Foto do aluno na @acao.ToLowerInvariant() do notebook @item.Patrimonio">Foto do aluno</a>
+                                    <a class="acao-tabela" data-paginacao-retorno asp-action="VerFoto" asp-route-id="@item.EmprestimoId" asp-route-tipo="@tipo"
+                                       asp-route-mes="@Model.Mes" asp-route-paginaAbertos="@paginaAbertos" asp-route-paginaMovimentacoes="@paginaMovimentacoes"
+                                       asp-route-paginaEventos="@paginaEventos" aria-label="Foto do aluno na @acao.ToLowerInvariant() do notebook @item.Patrimonio">Foto do aluno</a>
                                     @if (item.TemFotoNotebook)
                                     {
-                                        <a class="acao-tabela" asp-action="VerFoto" asp-route-id="@item.EmprestimoId" asp-route-tipo="@tipoFotoNotebook" asp-route-mes="@Model.Mes" aria-label="Foto do notebook @item.Patrimonio na @acao.ToLowerInvariant()">Foto do notebook</a>
+                                        <a class="acao-tabela" data-paginacao-retorno asp-action="VerFoto" asp-route-id="@item.EmprestimoId" asp-route-tipo="@tipoFotoNotebook"
+                                           asp-route-mes="@Model.Mes" asp-route-paginaAbertos="@paginaAbertos" asp-route-paginaMovimentacoes="@paginaMovimentacoes"
+                                           asp-route-paginaEventos="@paginaEventos" aria-label="Foto do notebook @item.Patrimonio na @acao.ToLowerInvariant()">Foto do notebook</a>
                                     }
                                 </div>
                             </div>
@@ -93,12 +126,13 @@
                 }
             </tbody>
         </table>
+        <partial name="_Paginacao" model="navegacaoMovimentos" />
     }
 </section>
 
-<section class="historico-secao" aria-labelledby="cadastros-manutencao">
+<section class="historico-secao" aria-labelledby="cadastros-manutencao" data-paginacao="paginaEventos" data-pagina-atual="@eventos.Atual">
     <h2 id="cadastros-manutencao">Cadastros e manutenção</h2>
-    @if (Model.Eventos.Count == 0)
+    @if (eventos.Itens.Count == 0)
     {
         <p class="vazio">Nenhum cadastro ou mudança de manutenção no mês selecionado.</p>
     }
@@ -113,7 +147,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var evento in Model.Eventos)
+                @foreach (var evento in eventos.Itens)
                 {
                     <tr>
                         <td><time datetime="@evento.DataLocal.ToString("s")">@evento.DataLocal.ToString("dd/MM/yyyy HH:mm")</time></td>
@@ -123,5 +157,10 @@
                 }
             </tbody>
         </table>
+        <partial name="_Paginacao" model="navegacaoEventos" />
     }
 </section>
+
+@section Scripts {
+    <script src="~/js/paginacao.js" asp-append-version="true" defer></script>
+}

@@ -11,9 +11,11 @@ public class HistoricoController(EmprestimosContexto contexto) : Controller
 {
     private static readonly CultureInfo Portugues = CultureInfo.GetCultureInfo("pt-BR");
     private static readonly TimeZoneInfo Fuso = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+    private const int ItensPorPagina = 5;
 
     [HttpGet("/historico")]
-    public async Task<IActionResult> Index(string? mes, CancellationToken cancelamento)
+    public async Task<IActionResult> Index(string? mes, int paginaAbertos, int paginaMovimentacoes, int paginaEventos,
+        CancellationToken cancelamento)
     {
         if (!DateTime.TryParseExact(mes, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var inicio)
             || inicio.Year == 9999)
@@ -67,10 +69,13 @@ public class HistoricoController(EmprestimosContexto contexto) : Controller
                 HoraLocal(item.RetiradoEmUtc))).ToListAsync(cancelamento);
 
         var eventos = await ListarEventos(inicioUtc, fimUtc, cancelamento);
+        var movimentacoesOrdenadas = movimentacoes.OrderByDescending(item => item.DataLocal)
+            .ThenByDescending(item => item.EmprestimoId).ThenByDescending(item => item.Devolucao).ToList();
         return View(new HistoricoFormulario(inicio.ToString("yyyy-MM", CultureInfo.InvariantCulture),
             inicio.ToString("MMMM 'de' yyyy", Portugues),
-            movimentacoes.OrderByDescending(item => item.DataLocal).ThenByDescending(item => item.EmprestimoId)
-                .ThenByDescending(item => item.Devolucao).ToList(), emAberto, eventos));
+            Pagina<MovimentacaoResumo>.Criar(movimentacoesOrdenadas, paginaMovimentacoes, ItensPorPagina),
+            Pagina<EmprestimoAbertoResumo>.Criar(emAberto, paginaAbertos, ItensPorPagina),
+            Pagina<EventoCadastroResumo>.Criar(eventos, paginaEventos, ItensPorPagina)));
     }
 
     private async Task<IReadOnlyList<EventoCadastroResumo>> ListarEventos(DateTime inicio, DateTime fim, CancellationToken cancelamento)
@@ -94,8 +99,8 @@ public class HistoricoController(EmprestimosContexto contexto) : Controller
     }
 
     [HttpGet("/historico/{id:int}/ver-foto/{tipo}")]
-    public async Task<IActionResult> VerFoto([FromRoute] int id, [FromRoute] string tipo, [FromQuery] string? mes,
-        CancellationToken cancelamento)
+    public async Task<IActionResult> VerFoto([FromRoute] int id, [FromRoute] string tipo, string? mes,
+        int? paginaAbertos, int? paginaMovimentacoes, int? paginaEventos, CancellationToken cancelamento)
     {
         var titulo = tipo switch
         {
@@ -113,7 +118,7 @@ public class HistoricoController(EmprestimosContexto contexto) : Controller
         }
 
         return View(new FotoPagina(titulo, Url.Action(nameof(Foto), new { id, tipo })!,
-            Url.Action(nameof(Index), new { mes })!));
+            Url.Action(nameof(Index), new { mes, paginaAbertos, paginaMovimentacoes, paginaEventos })!));
     }
 
     [HttpGet("/historico/{id:int}/foto/{tipo}")]

@@ -1,9 +1,11 @@
-@model IReadOnlyList<EmprestimoNotebooks.Models.NotebookResumo>
+@model EmprestimoNotebooks.Models.InventarioFormulario
 
 @{
     ViewData["Title"] = "Inventário de notebooks";
-    var disponiveis = Model.Count(notebook => !notebook.Emprestado && !notebook.EmManutencao);
-    var emprestados = Model.Count(notebook => notebook.Emprestado);
+    var notebooks = Model.Notebooks;
+    var navegacao = new EmprestimoNotebooks.Models.NavegacaoPagina(notebooks.Atual, notebooks.TotalPaginas,
+        "Paginação do inventário",
+        numero => Url.Action("Index", new { pagina = numero > 1 ? (int?)numero : null }));
 }
 
 <div class="titulo-acoes">
@@ -19,23 +21,24 @@
 <dl class="resumo">
     <div>
         <dt>Total</dt>
-        <dd>@Model.Count</dd>
+        <dd>@notebooks.TotalItens</dd>
     </div>
     <div>
         <dt>Disponíveis</dt>
-        <dd>@disponiveis</dd>
+        <dd>@Model.Disponiveis</dd>
     </div>
     <div>
         <dt>Emprestados</dt>
-        <dd>@emprestados</dd>
+        <dd>@Model.Emprestados</dd>
     </div>
     <div>
         <dt>Em manutenção</dt>
-        <dd>@(Model.Count - disponiveis - emprestados)</dd>
+        <dd>@Model.EmManutencao</dd>
     </div>
 </dl>
 
-@if (Model.Count == 0)
+<div data-paginacao="pagina" data-pagina-atual="@notebooks.Atual">
+@if (notebooks.Itens.Count == 0)
 {
     <p class="vazio">Nenhum notebook cadastrado.</p>
 }
@@ -52,7 +55,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var notebook in Model)
+            @foreach (var notebook in notebooks.Itens)
             {
                 <tr>
                     <th scope="row">@notebook.Patrimonio</th>
@@ -88,4 +91,10 @@ else
             }
         </tbody>
     </table>
+    <partial name="_Paginacao" model="navegacao" />
+}
+</div>
+
+@section Scripts {
+    <script src="~/js/paginacao.js" asp-append-version="true" defer></script>
 }

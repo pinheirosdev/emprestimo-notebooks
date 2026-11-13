@@ -1,8 +1,13 @@
-@model IReadOnlyList<EmprestimoNotebooks.Models.AlunoResumo>
+@model EmprestimoNotebooks.Models.AlunosFormulario
 
 @{
     ViewData["Title"] = "Alunos";
-    var busca = ViewData["Busca"] as string;
+    var busca = Model.Busca;
+    var alunos = Model.Alunos;
+    int? pagina = alunos.Atual > 1 ? alunos.Atual : null;
+    var navegacao = new EmprestimoNotebooks.Models.NavegacaoPagina(alunos.Atual, alunos.TotalPaginas,
+        "Paginação dos alunos",
+        numero => Url.Action("Index", new { busca, pagina = numero > 1 ? (int?)numero : null }));
 }
 
 <div class="titulo-acoes">
@@ -27,7 +32,8 @@
     }
 </form>
 
-@if (Model.Count == 0)
+<div data-paginacao="pagina" data-pagina-atual="@alunos.Atual">
+@if (alunos.Itens.Count == 0)
 {
     <p class="vazio">@(string.IsNullOrWhiteSpace(busca) ? "Nenhum aluno cadastrado." : "Nenhum aluno encontrado.")</p>
 }
@@ -44,15 +50,21 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var aluno in Model)
+            @foreach (var aluno in alunos.Itens)
             {
                 <tr>
                     <th scope="row">@aluno.NomeCompleto</th>
                     <td>@aluno.Matricula</td>
                     <td>@aluno.Turma</td>
-                    <td><a class="acao-tabela" asp-action="VerFoto" asp-route-id="@aluno.Id" asp-route-busca="@busca" aria-label="Ver foto de @aluno.NomeCompleto">Ver foto</a></td>
+                    <td><a class="acao-tabela" asp-action="VerFoto" asp-route-id="@aluno.Id" asp-route-busca="@busca" asp-route-pagina="@pagina" aria-label="Ver foto de @aluno.NomeCompleto">Ver foto</a></td>
                 </tr>
             }
         </tbody>
     </table>
+    <partial name="_Paginacao" model="navegacao" />
+}
+</div>
+
+@section Scripts {
+    <script src="~/js/paginacao.js" asp-append-version="true" defer></script>
 }

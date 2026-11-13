@@ -4,6 +4,9 @@ obj/
 .planning/
 artifacts/
 TestResults/
+.env
+.env.*
+!.env.example
 *.db
 *.db-*
 *.user

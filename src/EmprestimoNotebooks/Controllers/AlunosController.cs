@@ -14,10 +14,10 @@ public class AlunosController(EmprestimosContexto contexto) : Controller
     private const int RestricaoUnicaSqlite = 2067;
 
     [HttpGet("/alunos")]
-    public async Task<IActionResult> Index(string? busca, CancellationToken cancelamento)
+    public async Task<IActionResult> Index(string? busca, int pagina, CancellationToken cancelamento)
     {
-        ViewData["Busca"] = busca?.Trim();
-        return View(await ConsultaAlunos.Listar(contexto, busca, cancelamento));
+        var alunos = await ConsultaAlunos.Listar(contexto, busca, cancelamento);
+        return View(new AlunosFormulario(Pagina<AlunoResumo>.Criar(alunos, pagina, 10), busca?.Trim()));
     }
 
     [HttpGet("/alunos/cadastrar")]
@@ -63,7 +63,7 @@ public class AlunosController(EmprestimosContexto contexto) : Controller
     }
 
     [HttpGet("/alunos/{id:int}/ver-foto")]
-    public async Task<IActionResult> VerFoto([FromRoute] int id, [FromQuery] string? busca, CancellationToken cancelamento)
+    public async Task<IActionResult> VerFoto([FromRoute] int id, string? busca, int? pagina, CancellationToken cancelamento)
     {
         var nome = await contexto.Alunos.Where(aluno => aluno.Id == id)
             .Select(aluno => aluno.NomeCompleto).SingleOrDefaultAsync(cancelamento);
@@ -73,7 +73,7 @@ public class AlunosController(EmprestimosContexto contexto) : Controller
         }
 
         return View(new FotoPagina($"Foto de {nome}", Url.Action(nameof(Foto), new { id })!,
-            Url.Action(nameof(Index), new { busca })!));
+            Url.Action(nameof(Index), new { busca, pagina })!));
     }
 
     [HttpGet("/alunos/{id:int}/foto")]

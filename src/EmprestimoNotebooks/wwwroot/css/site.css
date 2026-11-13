@@ -268,6 +268,49 @@ h1 {
     gap: 0 .75rem;
 }
 
+.paginacao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(.125rem, 1vw, .375rem);
+    margin-top: 1rem;
+}
+
+.paginacao-seta,
+.paginacao-numero {
+    display: inline-grid;
+    place-items: center;
+    box-sizing: border-box;
+    min-width: clamp(1.75rem, 6vw, 2.75rem);
+    min-height: 2.75rem;
+    padding-inline: .25rem;
+    border-radius: .5rem;
+    color: #243874;
+    text-decoration: none;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.paginacao-seta {
+    font-size: 1.25rem;
+}
+
+.paginacao a:hover {
+    background: #eaf0f7;
+    text-decoration: underline;
+}
+
+.paginacao [aria-current="page"] {
+    background: #3452ac;
+    color: #fff;
+}
+
+.paginacao-inativa,
+.paginacao-reticencias {
+    color: #697890;
+}
+
 .tabela-notebooks thead th:last-child {
     width: 10.5rem;
 }
