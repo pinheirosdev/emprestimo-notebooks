@@ -262,14 +262,19 @@ h1 {
     padding-block: 0;
 }
 
-.tabela-notebooks thead th:last-child {
-    width: 19%;
-}
-
-.acoes-notebook {
+.acoes-tabela {
     display: flex;
     flex-wrap: wrap;
     gap: 0 .75rem;
+}
+
+.tabela-notebooks thead th:last-child {
+    width: 10.5rem;
+}
+
+.tabela-notebooks .acoes-tabela {
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
 .situacao {
@@ -341,7 +346,8 @@ h1 {
 }
 
 .campo input,
-.campo select {
+.campo select,
+.campo textarea {
     box-sizing: border-box;
     width: 100%;
     min-height: 2.75rem;
@@ -351,6 +357,10 @@ h1 {
     background: #fff;
     color: inherit;
     font: inherit;
+}
+
+.campo textarea {
+    resize: vertical;
 }
 
 .campo .input-validation-error {
@@ -393,6 +403,84 @@ h1 {
 .notebook-retirada {
     margin: -.75rem 0 1.5rem;
     color: #495870;
+}
+
+.historico-secao + .historico-secao {
+    margin-top: 2rem;
+}
+
+.historico-secao h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+}
+
+.filtro-mes .campo {
+    flex: 0 1 auto;
+    min-width: 11rem;
+}
+
+.tabela-historico thead th:first-child {
+    width: 17%;
+}
+
+.tabela-historico thead th:last-child {
+    width: 27%;
+}
+
+.tabela-historico td:last-child {
+    padding-block: .5rem;
+}
+
+.tabela-movimentacoes thead th:last-child {
+    width: 39%;
+}
+
+.historico-movimentacao {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(.75rem, 2.2vw, 1rem);
+}
+
+.historico-movimentacao strong {
+    white-space: nowrap;
+}
+
+.historico-movimentacao .acoes-tabela {
+    min-width: 0;
+}
+
+.historico-movimentacao .acao-tabela {
+    max-width: 100%;
+}
+
+.tabela-eventos thead th:last-child {
+    width: 34%;
+}
+
+.tabela-eventos td:last-child {
+    padding-block: .65rem;
+}
+
+.historico-matricula {
+    display: block;
+    color: #495870;
+    font-size: .875em;
+}
+
+.historico-observacao {
+    margin: .5rem 0 .25rem;
+    padding: .5rem .625rem;
+    border: 1px solid #dbe2ed;
+    border-radius: .5rem;
+    background: #f4f6fa;
+    white-space: pre-wrap;
+}
+
+.foto-registro {
+    display: block;
+    max-width: min(100%, 36rem);
+    height: auto;
+    border-radius: .5rem;
 }
 
 .camera {
@@ -495,8 +583,17 @@ h1 {
         width: 3.5rem;
     }
 
+    .tabela-notebooks thead th:first-child,
+    .tabela-notebooks thead th:nth-child(3) {
+        width: 22%;
+    }
+
     .tabela-notebooks thead th:last-child {
-        width: 4rem;
+        width: 7.5rem;
+    }
+
+    .tabela-notebooks .acoes-tabela {
+        gap: .25rem;
     }
 
     .tabela-alunos thead th:first-child {
@@ -507,8 +604,25 @@ h1 {
         width: 20%;
     }
 
-    .tabela-alunos thead th:last-child {
-        width: 4rem;
+    .tabela-historico thead th:first-child {
+        width: 20%;
+    }
+
+    .tabela-historico thead th:nth-child(3) {
+        width: 22%;
+    }
+
+    .tabela-historico thead th:last-child {
+        width: 29%;
+    }
+
+    .tabela-movimentacoes thead th:last-child {
+        width: 48%;
+    }
+
+    .tabela-movimentacoes thead th:first-child,
+    .tabela-movimentacoes thead th:nth-child(3) {
+        width: 17%;
     }
 
     .situacao {

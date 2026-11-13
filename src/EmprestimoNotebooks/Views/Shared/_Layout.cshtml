@@ -18,6 +18,7 @@
                     <nav class="navegacao" aria-label="Navegação principal">
                         <a asp-controller="Notebooks" asp-action="Index" aria-current="@(pagina is "Notebooks" or "Emprestimos" ? "location" : null)">Inventário</a>
                         <a asp-controller="Alunos" asp-action="Index" aria-current="@(pagina == "Alunos" ? "location" : null)">Alunos</a>
+                        <a asp-controller="Historico" asp-action="Index" aria-current="@(pagina == "Historico" ? "page" : null)">Histórico</a>
                     </nav>
                     <form asp-controller="Atendente" asp-action="Sair" method="post">
                         <button class="botao botao-secundario" type="submit">Sair</button>

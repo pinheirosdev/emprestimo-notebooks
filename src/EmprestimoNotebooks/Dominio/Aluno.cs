@@ -7,4 +7,5 @@ public class Aluno
     public required string Matricula { get; set; }
     public required string Turma { get; set; }
     public required byte[] FotoJpeg { get; set; }
+    public DateTime? CadastradoEmUtc { get; set; }
 }

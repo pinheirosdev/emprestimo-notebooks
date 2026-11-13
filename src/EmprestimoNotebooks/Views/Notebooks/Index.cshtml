@@ -72,8 +72,12 @@ else
                         }
                     </td>
                     <td>
-                        <div class="acoes-notebook">
-                            @if (!notebook.Emprestado && !notebook.EmManutencao)
+                        <div class="acoes-tabela">
+                            @if (notebook.EmprestimoAbertoId is int emprestimoId)
+                            {
+                                <a class="acao-tabela" asp-controller="Emprestimos" asp-action="Devolver" asp-route-id="@emprestimoId" aria-label="Devolver notebook @notebook.Patrimonio">Devolver</a>
+                            }
+                            else if (!notebook.EmManutencao)
                             {
                                 <a class="acao-tabela" asp-controller="Emprestimos" asp-action="Retirar" asp-route-id="@notebook.Id" aria-label="Retirar notebook @notebook.Patrimonio">Retirar</a>
                             }

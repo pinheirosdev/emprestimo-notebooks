@@ -1,38 +1,20 @@
-const camera = document.querySelector("[data-camera]");
-const arquivo = camera.querySelector('input[type="file"]');
-const video = camera.querySelector("video");
-const previa = camera.querySelector("img");
-const statusCamera = camera.querySelector('[role="status"]');
-const abrirCamera = camera.querySelector("[data-abrir-camera]");
-const tirarFoto = camera.querySelector("[data-tirar-foto]");
-const salvar = arquivo.form.querySelector('button[type="submit"]');
-const aluno = arquivo.form.querySelector("[data-camera-aluno]");
-
-let fluxo;
-let enderecoFoto;
-let sessao = 0;
+const camposDeFoto = Array.from(document.querySelectorAll("[data-camera]"));
+const formulario = camposDeFoto[0]?.closest("form");
+const aluno = formulario?.querySelector("[data-camera-aluno]");
+const salvar = formulario?.querySelector('button[type="submit"]');
 const capturaDisponivel = navigator.mediaDevices?.getUserMedia && typeof DataTransfer === "function";
+let cameraAtiva = null;
 
-function pararCamera() {
-    fluxo?.getTracks().forEach(trilha => trilha.stop());
-    fluxo = null;
-    video.srcObject = null;
-    video.hidden = true;
-    tirarFoto.hidden = true;
-    abrirCamera.hidden = false;
-}
+const cameras = camposDeFoto.map(prepararCamera);
 
-function limparFoto() {
-    if (enderecoFoto) {
-        URL.revokeObjectURL(enderecoFoto);
-        enderecoFoto = null;
+function atualizarFormulario() {
+    const faltaFoto = cameras.some(camera => !camera.arquivo.files.length);
+    const faltaAluno = Boolean(aluno && !aluno.value);
+    salvar.disabled = faltaFoto || faltaAluno || cameraAtiva !== null;
+
+    for (const camera of cameras) {
+        camera.abrir.disabled = faltaAluno || cameraAtiva !== null;
     }
-
-    previa.removeAttribute("src");
-    previa.hidden = true;
-    arquivo.value = "";
-    salvar.disabled = true;
-    abrirCamera.textContent = "Abrir câmera";
 }
 
 function mensagemDaCamera(erro) {
@@ -47,101 +29,145 @@ function mensagemDaCamera(erro) {
     return "Não foi possível abrir a câmera. Verifique se outro aplicativo está usando a câmera.";
 }
 
-abrirCamera.addEventListener("click", async () => {
-    const atual = ++sessao;
-    limparFoto();
-    abrirCamera.disabled = true;
-    statusCamera.textContent = "Abrindo a câmera…";
+function prepararCamera(campo) {
+    const arquivo = campo.querySelector('input[type="file"]');
+    const video = campo.querySelector("video");
+    const previa = campo.querySelector("img");
+    const status = campo.querySelector('[role="status"]');
+    const abrir = campo.querySelector("[data-abrir-camera]");
+    const tirar = campo.querySelector("[data-tirar-foto]");
+    const fechar = campo.querySelector("[data-fechar-camera]");
+    const camera = { arquivo, abrir, reiniciar };
 
-    try {
-        const novoFluxo = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        if (atual !== sessao) {
-            novoFluxo.getTracks().forEach(trilha => trilha.stop());
-            return;
-        }
+    let fluxo;
+    let enderecoFoto;
+    let sessao = 0;
 
-        fluxo = novoFluxo;
-        video.srcObject = fluxo;
-        video.hidden = false;
-        await video.play();
-        if (atual !== sessao) {
-            return;
-        }
-
-        abrirCamera.hidden = true;
-        tirarFoto.hidden = false;
-        tirarFoto.disabled = false;
-        statusCamera.textContent = "Câmera aberta.";
-        tirarFoto.focus();
-    } catch (erro) {
-        if (atual === sessao) {
-            pararCamera();
-            statusCamera.textContent = mensagemDaCamera(erro);
-            abrirCamera.disabled = false;
-            abrirCamera.focus();
-        }
-    } finally {
-        if (atual === sessao) {
-            abrirCamera.disabled = false;
-        }
-    }
-});
-
-tirarFoto.addEventListener("click", () => {
-    if (!video.videoWidth || !video.videoHeight) {
-        statusCamera.textContent = "Aguarde a imagem da câmera e tente novamente.";
-        return;
+    function parar() {
+        sessao++;
+        fluxo?.getTracks().forEach(trilha => trilha.stop());
+        fluxo = null;
+        video.srcObject = null;
+        video.hidden = true;
+        tirar.hidden = true;
+        fechar.hidden = true;
+        abrir.hidden = !capturaDisponivel;
+        previa.hidden = !enderecoFoto;
+        if (cameraAtiva === camera) cameraAtiva = null;
     }
 
-    const atual = sessao;
-    const canvas = document.createElement("canvas");
-    const escala = Math.min(1, 960 / Math.max(video.videoWidth, video.videoHeight));
-    canvas.width = Math.round(video.videoWidth * escala);
-    canvas.height = Math.round(video.videoHeight * escala);
-    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-    tirarFoto.disabled = true;
+    function limparFoto() {
+        if (enderecoFoto) URL.revokeObjectURL(enderecoFoto);
+        enderecoFoto = null;
+        previa.removeAttribute("src");
+        previa.hidden = true;
+        arquivo.value = "";
+        abrir.textContent = "Abrir câmera";
+    }
 
-    canvas.toBlob(foto => {
-        if (atual !== sessao) {
+    function reiniciar() {
+        parar();
+        limparFoto();
+        if (!capturaDisponivel) {
+            status.textContent = window.isSecureContext
+                ? "Este navegador não oferece suporte à captura pela câmera."
+                : "Abra o sistema em localhost ou HTTPS para usar a câmera.";
+        } else {
+            status.textContent = aluno && !aluno.value ? "Selecione o aluno para abrir a câmera." : "";
+        }
+    }
+
+    abrir.addEventListener("click", async () => {
+        const atual = ++sessao;
+        cameraAtiva = camera;
+        atualizarFormulario();
+        previa.hidden = true;
+        abrir.hidden = true;
+        fechar.hidden = false;
+        status.textContent = "Abrindo a câmera…";
+        fechar.focus();
+
+        try {
+            const novoFluxo = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            if (atual !== sessao) {
+                novoFluxo.getTracks().forEach(trilha => trilha.stop());
+                return;
+            }
+
+            fluxo = novoFluxo;
+            video.srcObject = fluxo;
+            video.hidden = false;
+            await video.play();
+            if (atual !== sessao) return;
+
+            tirar.hidden = false;
+            tirar.disabled = false;
+            status.textContent = "Câmera aberta.";
+            tirar.focus();
+        } catch (erro) {
+            if (atual === sessao) {
+                parar();
+                atualizarFormulario();
+                status.textContent = mensagemDaCamera(erro);
+                abrir.focus();
+            }
+        }
+    });
+
+    tirar.addEventListener("click", () => {
+        if (!video.videoWidth || !video.videoHeight) {
+            status.textContent = "Aguarde a imagem da câmera e tente novamente.";
             return;
         }
 
-        if (!foto || foto.type !== "image/jpeg") {
-            statusCamera.textContent = "Não foi possível tirar a foto. Tente novamente.";
-            tirarFoto.disabled = false;
-            return;
-        }
+        const atual = sessao;
+        const canvas = document.createElement("canvas");
+        const escala = Math.min(1, 960 / Math.max(video.videoWidth, video.videoHeight));
+        canvas.width = Math.round(video.videoWidth * escala);
+        canvas.height = Math.round(video.videoHeight * escala);
+        canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+        tirar.disabled = true;
 
-        const arquivos = new DataTransfer();
-        arquivos.items.add(new File([foto], "foto.jpg", { type: "image/jpeg" }));
-        arquivo.files = arquivos.files;
-        enderecoFoto = URL.createObjectURL(foto);
-        previa.src = enderecoFoto;
-        previa.hidden = false;
-        pararCamera();
-        salvar.disabled = false;
-        abrirCamera.textContent = "Refazer foto";
-        statusCamera.textContent = "Foto pronta. Confira a prévia antes de salvar.";
-        abrirCamera.focus();
-    }, "image/jpeg", 0.85);
-});
+        canvas.toBlob(foto => {
+            if (atual !== sessao) return;
 
-function reiniciarCamera() {
-    sessao++;
-    pararCamera();
-    limparFoto();
-    abrirCamera.hidden = !capturaDisponivel;
-    abrirCamera.disabled = aluno !== null && !aluno.value;
-    statusCamera.textContent = abrirCamera.disabled ? "Selecione o aluno para abrir a câmera." : "";
+            if (!foto || foto.type !== "image/jpeg" || foto.size > 1024 * 1024) {
+                status.textContent = "Não foi possível tirar a foto. Tente novamente.";
+                tirar.disabled = false;
+                return;
+            }
+
+            limparFoto();
+            const arquivos = new DataTransfer();
+            arquivos.items.add(new File([foto], "foto.jpg", { type: "image/jpeg" }));
+            arquivo.files = arquivos.files;
+            enderecoFoto = URL.createObjectURL(foto);
+            previa.src = enderecoFoto;
+            parar();
+            atualizarFormulario();
+            abrir.textContent = "Refazer foto";
+            status.textContent = "Foto pronta. Confira a prévia antes de salvar.";
+            abrir.focus();
+        }, "image/jpeg", 0.85);
+    });
+
+    fechar.addEventListener("click", () => {
+        parar();
+        atualizarFormulario();
+        status.textContent = "Câmera fechada.";
+        abrir.focus();
+    });
+
+    return camera;
 }
 
-window.addEventListener("pagehide", reiniciarCamera);
+function reiniciarCameras() {
+    cameras.forEach(camera => camera.reiniciar());
+    atualizarFormulario();
+}
 
-if (capturaDisponivel) {
-    aluno?.addEventListener("change", reiniciarCamera);
-    reiniciarCamera();
-} else {
-    statusCamera.textContent = window.isSecureContext
-        ? "Este navegador não oferece suporte à captura pela câmera."
-        : "Abra o sistema em localhost ou HTTPS para usar a câmera.";
+if (formulario) {
+    aluno?.addEventListener("change", reiniciarCameras);
+    window.addEventListener("pagehide", reiniciarCameras);
+    reiniciarCameras();
 }

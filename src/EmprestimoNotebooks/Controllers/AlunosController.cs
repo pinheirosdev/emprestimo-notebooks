@@ -44,7 +44,8 @@ public class AlunosController(EmprestimosContexto contexto) : Controller
             NomeCompleto = formulario.NomeCompleto.Trim(),
             Matricula = formulario.Matricula.Trim(),
             Turma = formulario.Turma.Trim(),
-            FotoJpeg = foto
+            FotoJpeg = foto,
+            CadastradoEmUtc = DateTime.UtcNow
         });
 
         try
@@ -59,6 +60,20 @@ public class AlunosController(EmprestimosContexto contexto) : Controller
 
         TempData["Mensagem"] = "Aluno cadastrado.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet("/alunos/{id:int}/ver-foto")]
+    public async Task<IActionResult> VerFoto([FromRoute] int id, [FromQuery] string? busca, CancellationToken cancelamento)
+    {
+        var nome = await contexto.Alunos.Where(aluno => aluno.Id == id)
+            .Select(aluno => aluno.NomeCompleto).SingleOrDefaultAsync(cancelamento);
+        if (nome is null)
+        {
+            return NotFound();
+        }
+
+        return View(new FotoPagina($"Foto de {nome}", Url.Action(nameof(Foto), new { id })!,
+            Url.Action(nameof(Index), new { busca })!));
     }
 
     [HttpGet("/alunos/{id:int}/foto")]

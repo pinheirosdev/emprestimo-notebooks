@@ -8,6 +8,7 @@ public class EmprestimosContexto(DbContextOptions<EmprestimosContexto> opcoes) :
     public DbSet<Notebook> Notebooks => Set<Notebook>();
     public DbSet<Aluno> Alunos => Set<Aluno>();
     public DbSet<Emprestimo> Emprestimos => Set<Emprestimo>();
+    public DbSet<ManutencaoNotebook> ManutencoesNotebook => Set<ManutencaoNotebook>();
     public IQueryable<Emprestimo> EmprestimosAbertos => Emprestimos.Where(emprestimo => emprestimo.DevolvidoEmUtc == null);
 
     protected override void OnModelCreating(ModelBuilder modelo)
@@ -24,6 +25,9 @@ public class EmprestimosContexto(DbContextOptions<EmprestimosContexto> opcoes) :
         emprestimo.HasOne<Notebook>().WithMany().HasForeignKey(item => item.NotebookId).OnDelete(DeleteBehavior.Restrict);
         emprestimo.HasOne<Aluno>().WithMany().HasForeignKey(item => item.AlunoId).OnDelete(DeleteBehavior.Restrict);
         emprestimo.HasIndex(item => item.NotebookId).IsUnique().HasFilter("\"DevolvidoEmUtc\" IS NULL");
+
+        modelo.Entity<ManutencaoNotebook>().HasOne<Notebook>().WithMany()
+            .HasForeignKey(item => item.NotebookId).OnDelete(DeleteBehavior.Restrict);
 
         modelo.Entity<ControleCarga>().ToTable("ControleCarga");
     }

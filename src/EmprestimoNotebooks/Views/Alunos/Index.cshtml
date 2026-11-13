@@ -50,7 +50,7 @@ else
                     <th scope="row">@aluno.NomeCompleto</th>
                     <td>@aluno.Matricula</td>
                     <td>@aluno.Turma</td>
-                    <td><a class="acao-tabela" asp-action="Foto" asp-route-id="@aluno.Id" aria-label="Ver foto de @aluno.NomeCompleto">Ver foto</a></td>
+                    <td><a class="acao-tabela" asp-action="VerFoto" asp-route-id="@aluno.Id" asp-route-busca="@busca" aria-label="Ver foto de @aluno.NomeCompleto">Ver foto</a></td>
                 </tr>
             }
         </tbody>

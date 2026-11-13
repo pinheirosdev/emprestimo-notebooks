@@ -1,0 +1,43 @@
+@model EmprestimoNotebooks.Models.DevolucaoFormulario
+
+@{
+    ViewData["Title"] = "Devolver notebook";
+}
+
+<h1>Devolver notebook</h1>
+<p class="notebook-retirada"><strong>@Model.Patrimonio</strong> · @Model.Marca @Model.Modelo<br>@Model.NomeCompleto · @Model.Matricula</p>
+
+@if (Model.Encerrado)
+{
+    <div asp-validation-summary="ModelOnly" role="alert"></div>
+    <div class="formulario-acoes">
+        <a class="botao botao-secundario" asp-controller="Notebooks" asp-action="Index">Voltar ao inventário</a>
+    </div>
+}
+else
+{
+    <form class="formulario" asp-action="Devolver" asp-route-id="@Model.EmprestimoId" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" role="alert"></div>
+
+        <partial name="_Camera" model='"Foto"' />
+        <partial name="_Camera" model='"FotoNotebook"' />
+
+        <div class="campo">
+            <label asp-for="Observacao">Observação (opcional)</label>
+            <textarea asp-for="Observacao" rows="3" maxlength="500" aria-describedby="erro-observacao"></textarea>
+            <span asp-validation-for="Observacao" id="erro-observacao"></span>
+        </div>
+
+        <div class="formulario-acoes">
+            <button class="botao" type="submit" disabled>Registrar devolução</button>
+            <a class="botao botao-secundario" asp-controller="Notebooks" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    @if (!Model.Encerrado)
+    {
+        <script src="~/js/camera.js" asp-append-version="true" defer></script>
+    }
+}

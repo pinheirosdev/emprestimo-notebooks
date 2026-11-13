@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xunit;
+using static EmprestimoNotebooks.Tests.FotosDeTeste;
 
 namespace EmprestimoNotebooks.Tests;
 
@@ -47,6 +48,22 @@ internal class AplicacaoDeTeste(string caminhoDoBanco, IInterceptor? interceptad
         campos[CampoToken] = await ObterTokenAsync(cliente, pagina);
         using var conteudo = new FormUrlEncodedContent(campos);
         return await cliente.PostAsync(destino, conteudo, TestContext.Current.CancellationToken);
+    }
+
+    internal static async Task<HttpResponseMessage> CadastrarAlunoAsync(
+        HttpClient cliente, string matricula, string? foto, string nome = "Ana Lima", string pagina = "/alunos/cadastrar")
+    {
+        using var formulario = new MultipartFormDataContent
+        {
+            { new StringContent(await ObterTokenAsync(cliente, pagina)), CampoToken },
+            { new StringContent(nome), "NomeCompleto" },
+            { new StringContent(matricula), "Matricula" },
+            { new StringContent("Turma 1"), "Turma" }
+        };
+
+        AnexarFoto(formulario, foto);
+
+        return await cliente.PostAsync("/alunos/cadastrar", formulario, TestContext.Current.CancellationToken);
     }
 
     internal static async Task<string> ObterTokenAsync(HttpClient cliente, string pagina)

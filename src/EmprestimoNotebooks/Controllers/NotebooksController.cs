@@ -19,7 +19,8 @@ public class NotebooksController(EmprestimosContexto contexto) : Controller
             .AsNoTracking()
             .OrderBy(notebook => notebook.Patrimonio)
             .Select(notebook => new NotebookResumo(notebook.Id, notebook.Patrimonio, notebook.Marca, notebook.Modelo,
-                notebook.EmManutencao, contexto.EmprestimosAbertos.Any(emprestimo => emprestimo.NotebookId == notebook.Id)))
+                notebook.EmManutencao, contexto.EmprestimosAbertos.Where(emprestimo => emprestimo.NotebookId == notebook.Id)
+                    .Select(emprestimo => (int?)emprestimo.Id).FirstOrDefault()))
             .ToListAsync(cancelamento);
 
         return View(notebooks);
@@ -76,33 +77,50 @@ public class NotebooksController(EmprestimosContexto contexto) : Controller
         {
             if (id is int notebookId)
             {
-                var editados = await contexto.Notebooks.Where(notebook => notebook.Id == notebookId
-                        && (!formulario.EmManutencao || !contexto.EmprestimosAbertos.Any(emprestimo => emprestimo.NotebookId == notebook.Id)))
-                    .ExecuteUpdateAsync(campos => campos
-                        .SetProperty(notebook => notebook.Patrimonio, patrimonio)
-                        .SetProperty(notebook => notebook.Marca, marca)
-                        .SetProperty(notebook => notebook.Modelo, modelo)
-                        .SetProperty(notebook => notebook.EmManutencao, formulario.EmManutencao), cancelamento);
-
-                if (editados == 0)
+                await using var transacao = await contexto.Database.BeginTransactionAsync(cancelamento);
+                var notebook = await contexto.Notebooks.SingleOrDefaultAsync(item => item.Id == notebookId, cancelamento);
+                if (notebook is null)
                 {
-                    if (!await contexto.Notebooks.AnyAsync(notebook => notebook.Id == notebookId, cancelamento))
-                    {
-                        return NotFound();
-                    }
+                    return NotFound();
+                }
 
+                if (formulario.EmManutencao && await contexto.EmprestimosAbertos.AnyAsync(emprestimo => emprestimo.NotebookId == notebookId, cancelamento))
+                {
                     ModelState.AddModelError(nameof(formulario.EmManutencao), "Devolva o notebook antes de marcá-lo em manutenção.");
                     return View("Formulario", formulario);
                 }
+
+                if (notebook.EmManutencao != formulario.EmManutencao)
+                {
+                    contexto.ManutencoesNotebook.Add(new ManutencaoNotebook
+                    {
+                        NotebookId = notebookId,
+                        AlteradoEmUtc = DateTime.UtcNow,
+                        EmManutencao = formulario.EmManutencao
+                    });
+                }
+
+                notebook.Patrimonio = patrimonio;
+                notebook.Marca = marca;
+                notebook.Modelo = modelo;
+                notebook.EmManutencao = formulario.EmManutencao;
+                await contexto.SaveChangesAsync(cancelamento);
+                await transacao.CommitAsync(cancelamento);
             }
             else
             {
-                contexto.Notebooks.Add(new Notebook { Patrimonio = patrimonio, Marca = marca, Modelo = modelo, EmManutencao = formulario.EmManutencao });
+                contexto.Notebooks.Add(new Notebook
+                {
+                    Patrimonio = patrimonio,
+                    Marca = marca,
+                    Modelo = modelo,
+                    EmManutencao = formulario.EmManutencao,
+                    CadastradoEmUtc = DateTime.UtcNow
+                });
                 await contexto.SaveChangesAsync(cancelamento);
             }
         }
-        catch (Exception erro) when (erro is SqliteException { SqliteExtendedErrorCode: RestricaoUnicaSqlite }
-            or DbUpdateException { InnerException: SqliteException { SqliteExtendedErrorCode: RestricaoUnicaSqlite } })
+        catch (DbUpdateException erro) when (erro.InnerException is SqliteException { SqliteExtendedErrorCode: RestricaoUnicaSqlite })
         {
             ModelState.AddModelError(nameof(formulario.Patrimonio), "Já existe um notebook com esse patrimônio.");
             return View("Formulario", formulario);

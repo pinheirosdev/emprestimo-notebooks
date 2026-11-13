@@ -65,7 +65,8 @@ else
                 <span asp-validation-for="AlunoId" id="erro-aluno"></span>
             </div>
 
-            <partial name="_Camera" />
+            <partial name="_Camera" model='"Foto"' />
+            <partial name="_Camera" model='"FotoNotebook"' />
 
             <div class="formulario-acoes">
                 <button class="botao" type="submit" disabled>Registrar retirada</button>

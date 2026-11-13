@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using SkiaSharp;
 
 namespace EmprestimoNotebooks.Tests;
 
@@ -20,7 +21,7 @@ internal static class FotosDeTeste
         fo2H/gw9F+R//9k=
         """;
 
-    internal static void AnexarFoto(MultipartFormDataContent formulario, string? foto)
+    internal static void AnexarFoto(MultipartFormDataContent formulario, string? foto, string campo = "Foto")
     {
         if (foto is null)
         {
@@ -29,6 +30,14 @@ internal static class FotosDeTeste
 
         var arquivo = new ByteArrayContent(Convert.FromBase64String(foto));
         arquivo.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-        formulario.Add(arquivo, "Foto", "foto.jpg");
+        formulario.Add(arquivo, campo, "foto.jpg");
+    }
+
+    internal static string CriarFoto(int largura)
+    {
+        using var imagem = new SKBitmap(largura, 2);
+        imagem.Erase(SKColors.SteelBlue);
+        using var jpeg = imagem.Encode(SKEncodedImageFormat.Jpeg, 85);
+        return Convert.ToBase64String(jpeg.ToArray());
     }
 }

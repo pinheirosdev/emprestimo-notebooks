@@ -40,8 +40,8 @@ public class RetiradasTestes : IDisposable
         var segundoToken = await ObterTokenAsync(segundoCliente, retirada);
 
         var antesDaRetirada = DateTime.UtcNow;
-        var primeiraTentativa = RetirarAsync(primeiroCliente, retirada, primeiroToken, primeiroAluno.Id, CriarFoto(3));
-        var segundaTentativa = RetirarAsync(segundoCliente, retirada, segundoToken, segundoAluno.Id, CriarFoto(4));
+        var primeiraTentativa = RetirarAsync(primeiroCliente, retirada, primeiroToken, primeiroAluno.Id, CriarFoto(3), CriarFoto(5));
+        var segundaTentativa = RetirarAsync(segundoCliente, retirada, segundoToken, segundoAluno.Id, CriarFoto(4), CriarFoto(6));
         await Task.WhenAll(primeiraTentativa, segundaTentativa);
         using var primeiraResposta = await primeiraTentativa;
         using var segundaResposta = await segundaTentativa;
@@ -62,6 +62,10 @@ public class RetiradasTestes : IDisposable
         using var foto = SKBitmap.Decode(emprestimo.FotoRetiradaJpeg);
         Assert.NotNull(foto);
         Assert.Equal(sucesso == primeiraResposta ? 3 : 4, foto.Width);
+        Assert.NotNull(emprestimo.FotoNotebookRetiradaJpeg);
+        using var fotoNotebook = SKBitmap.Decode(emprestimo.FotoNotebookRetiradaJpeg);
+        Assert.NotNull(fotoNotebook);
+        Assert.Equal(sucesso == primeiraResposta ? 5 : 6, fotoNotebook.Width);
 
         var inventario = WebUtility.HtmlDecode(await primeiroCliente.GetStringAsync("/", cancelamento));
         var linha = Assert.Single(inventario.Split("</tr>"), parte => parte.Contains(">NB-001<"));
@@ -99,16 +103,18 @@ public class RetiradasTestes : IDisposable
         using var formulario = await cliente.GetAsync(retirada, cancelamento);
         Assert.Equal(HttpStatusCode.Conflict, formulario.StatusCode);
         var token = await ObterTokenAsync(cliente, "/");
-        using var resposta = await RetirarAsync(cliente, retirada, token, aluno.Id, JpegSintetico);
+        using var resposta = await RetirarAsync(cliente, retirada, token, aluno.Id, JpegSintetico, JpegSintetico);
         Assert.Equal(HttpStatusCode.Conflict, resposta.StatusCode);
         Assert.False(await banco.Emprestimos.AnyAsync(cancelamento));
     }
 
     [Theory]
-    [InlineData(false, JpegSintetico, "AlunoId")]
-    [InlineData(true, null, "Foto")]
-    [InlineData(true, "dGV4dG8=", "Foto")]
-    public async Task RetiradaComDadosInvalidosExibeErroENaoGrava(bool alunoValido, string? foto, string campo)
+    [InlineData(false, JpegSintetico, JpegSintetico, "AlunoId")]
+    [InlineData(true, null, JpegSintetico, "Foto")]
+    [InlineData(true, "dGV4dG8=", JpegSintetico, "Foto")]
+    [InlineData(true, JpegSintetico, null, "FotoNotebook")]
+    [InlineData(true, JpegSintetico, "dGV4dG8=", "FotoNotebook")]
+    public async Task RetiradaComDadosInvalidosExibeErroENaoGrava(bool alunoValido, string? foto, string? fotoNotebook, string campo)
     {
         var cancelamento = TestContext.Current.CancellationToken;
         await using var aplicacao = new AplicacaoDeTeste(_caminhoDoBanco);
@@ -122,7 +128,7 @@ public class RetiradasTestes : IDisposable
         var retirada = $"/notebooks/{notebook.Id}/retirar";
         var token = await ObterTokenAsync(cliente, retirada);
 
-        using var resposta = await RetirarAsync(cliente, retirada, token, alunoValido ? aluno.Id : aluno.Id + 1, foto);
+        using var resposta = await RetirarAsync(cliente, retirada, token, alunoValido ? aluno.Id : aluno.Id + 1, foto, fotoNotebook);
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         var html = await resposta.Content.ReadAsStringAsync(cancelamento);
         Assert.Matches($$"""data-valmsg-for="{{campo}}"[^>]*>\s*[^\s<]""", html);
@@ -144,7 +150,7 @@ public class RetiradasTestes : IDisposable
         using var formulario = await cliente.GetAsync(retirada, cancelamento);
         AssertRedirecionaParaEntrar(cliente, formulario);
         var token = await ObterTokenAsync(cliente, "/entrar");
-        using var resposta = await RetirarAsync(cliente, retirada, token, aluno.Id, JpegSintetico);
+        using var resposta = await RetirarAsync(cliente, retirada, token, aluno.Id, JpegSintetico, JpegSintetico);
         AssertRedirecionaParaEntrar(cliente, resposta);
         Assert.False(await banco.Emprestimos.AnyAsync(cancelamento));
     }
@@ -170,16 +176,8 @@ public class RetiradasTestes : IDisposable
         EmprestimosContexto banco, string patrimonio, CancellationToken cancelamento) =>
         banco.Notebooks.AsNoTracking().SingleAsync(notebook => notebook.Patrimonio == patrimonio, cancelamento);
 
-    private static string CriarFoto(int largura)
-    {
-        using var imagem = new SKBitmap(largura, 2);
-        imagem.Erase(SKColors.SteelBlue);
-        using var jpeg = imagem.Encode(SKEncodedImageFormat.Jpeg, 85);
-        return Convert.ToBase64String(jpeg.ToArray());
-    }
-
     private static async Task<HttpResponseMessage> RetirarAsync(
-        HttpClient cliente, string destino, string token, int alunoId, string? foto)
+        HttpClient cliente, string destino, string token, int alunoId, string? foto, string? fotoNotebook)
     {
         using var formulario = new MultipartFormDataContent
         {
@@ -187,6 +185,7 @@ public class RetiradasTestes : IDisposable
             { new StringContent(alunoId.ToString(CultureInfo.InvariantCulture)), "AlunoId" }
         };
         AnexarFoto(formulario, foto);
+        AnexarFoto(formulario, fotoNotebook, "FotoNotebook");
         return await cliente.PostAsync(destino, formulario, TestContext.Current.CancellationToken);
     }
 

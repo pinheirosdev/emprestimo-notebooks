@@ -8,4 +8,8 @@ public class Emprestimo
     public DateTime RetiradoEmUtc { get; set; }
     public DateTime? DevolvidoEmUtc { get; set; }
     public required byte[] FotoRetiradaJpeg { get; set; }
+    public byte[]? FotoNotebookRetiradaJpeg { get; set; }
+    public byte[]? FotoDevolucaoJpeg { get; set; }
+    public byte[]? FotoNotebookJpeg { get; set; }
+    public string? ObservacaoDevolucao { get; set; }
 }

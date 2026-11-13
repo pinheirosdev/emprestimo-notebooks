@@ -23,7 +23,7 @@ public class AlunosTestes : IDisposable
         using var login = await EntrarAsync(cliente);
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
 
-        using var cadastro = await CadastrarAsync(cliente, "AL-101", JpegSintetico);
+        using var cadastro = await CadastrarAlunoAsync(cliente, "AL-101", JpegSintetico);
         Assert.Equal(HttpStatusCode.Redirect, cadastro.StatusCode);
         Assert.Equal("/alunos", cadastro.Headers.Location?.OriginalString);
 
@@ -35,7 +35,15 @@ public class AlunosTestes : IDisposable
         Assert.Equal("Turma 1", aluno.Turma);
         Assert.True(aluno.FotoJpeg.AsSpan().StartsWith(new byte[] { 0xFF, 0xD8, 0xFF }));
 
+        var rotaVisualizacao = $"/alunos/{aluno.Id}/ver-foto?busca=AL-101";
+        var listaFiltrada = await cliente.GetStringAsync("/alunos?busca=AL-101", cancelamento);
+        Assert.Contains($"href=\"{rotaVisualizacao}\"", listaFiltrada);
+
         var rotaFoto = $"/alunos/{aluno.Id}/foto";
+        var visualizacao = await cliente.GetStringAsync(rotaVisualizacao, cancelamento);
+        Assert.Contains($"src=\"{rotaFoto}\"", visualizacao);
+        Assert.Matches("""<a\b[^>]*\bhref="/alunos\?busca=AL-101"[^>]*>\s*Voltar\s*</a>""", visualizacao);
+
         using var foto = await cliente.GetAsync(rotaFoto, cancelamento);
         Assert.Equal(HttpStatusCode.OK, foto.StatusCode);
         Assert.Equal("image/jpeg", foto.Content.Headers.ContentType?.MediaType);
@@ -43,6 +51,8 @@ public class AlunosTestes : IDisposable
         Assert.Equal(aluno.FotoJpeg, await foto.Content.ReadAsByteArrayAsync(cancelamento));
 
         using var anonimo = aplicacao.CriarCliente();
+        using var visualizacaoSemLogin = await anonimo.GetAsync(rotaVisualizacao, cancelamento);
+        AssertRedirecionaParaEntrar(anonimo, visualizacaoSemLogin);
         using var acessoSemLogin = await anonimo.GetAsync(rotaFoto, cancelamento);
         AssertRedirecionaParaEntrar(anonimo, acessoSemLogin);
     }
@@ -55,8 +65,8 @@ public class AlunosTestes : IDisposable
         using var cliente = aplicacao.CriarCliente();
         using var login = await EntrarAsync(cliente);
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
-        using var primeiro = await CadastrarAsync(cliente, "AL-101", JpegSintetico, nome: "Ana Conceição");
-        using var segundo = await CadastrarAsync(cliente, "AL-202", JpegSintetico, nome: "Bruno Rocha");
+        using var primeiro = await CadastrarAlunoAsync(cliente, "AL-101", JpegSintetico, nome: "Ana Conceição");
+        using var segundo = await CadastrarAlunoAsync(cliente, "AL-202", JpegSintetico, nome: "Bruno Rocha");
         Assert.Equal(HttpStatusCode.Redirect, primeiro.StatusCode);
         Assert.Equal(HttpStatusCode.Redirect, segundo.StatusCode);
 
@@ -80,7 +90,7 @@ public class AlunosTestes : IDisposable
         AssertRedirecionaParaEntrar(cliente, listagem);
         using var formulario = await cliente.GetAsync(Cadastro, cancelamento);
         AssertRedirecionaParaEntrar(cliente, formulario);
-        using var cadastro = await CadastrarAsync(cliente, "AL-101", JpegSintetico, pagina: "/entrar");
+        using var cadastro = await CadastrarAlunoAsync(cliente, "AL-101", JpegSintetico, pagina: "/entrar");
         AssertRedirecionaParaEntrar(cliente, cadastro);
 
         using var escopo = aplicacao.Services.CreateScope();
@@ -96,10 +106,10 @@ public class AlunosTestes : IDisposable
         using var cliente = aplicacao.CriarCliente();
         using var login = await EntrarAsync(cliente);
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
-        using var cadastro = await CadastrarAsync(cliente, "AL-101", JpegSintetico);
+        using var cadastro = await CadastrarAlunoAsync(cliente, "AL-101", JpegSintetico);
         Assert.Equal(HttpStatusCode.Redirect, cadastro.StatusCode);
 
-        using var duplicado = await CadastrarAsync(cliente, "al-101", JpegSintetico, nome: "Bruno Rocha");
+        using var duplicado = await CadastrarAlunoAsync(cliente, "al-101", JpegSintetico, nome: "Bruno Rocha");
         Assert.Equal(HttpStatusCode.OK, duplicado.StatusCode);
         var html = await duplicado.Content.ReadAsStringAsync(cancelamento);
         Assert.Matches("""data-valmsg-for="Matricula"[^>]*>\s*[^\s<]""", html);
@@ -122,7 +132,7 @@ public class AlunosTestes : IDisposable
         using var login = await EntrarAsync(cliente);
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
 
-        using var cadastro = await CadastrarAsync(cliente, "AL-101", foto);
+        using var cadastro = await CadastrarAlunoAsync(cliente, "AL-101", foto);
         Assert.Equal(HttpStatusCode.OK, cadastro.StatusCode);
         var html = await cadastro.Content.ReadAsStringAsync(cancelamento);
         Assert.Matches("""data-valmsg-for="Foto"[^>]*>\s*[^\s<]""", html);
@@ -133,20 +143,4 @@ public class AlunosTestes : IDisposable
     }
 
     public void Dispose() => File.Delete(_caminhoDoBanco);
-
-    private static async Task<HttpResponseMessage> CadastrarAsync(
-        HttpClient cliente, string matricula, string? foto, string nome = "Ana Lima", string pagina = Cadastro)
-    {
-        using var formulario = new MultipartFormDataContent
-        {
-            { new StringContent(await ObterTokenAsync(cliente, pagina)), CampoToken },
-            { new StringContent(nome), "NomeCompleto" },
-            { new StringContent(matricula), "Matricula" },
-            { new StringContent("Turma 1"), "Turma" }
-        };
-
-        AnexarFoto(formulario, foto);
-
-        return await cliente.PostAsync(Cadastro, formulario, TestContext.Current.CancellationToken);
-    }
 }

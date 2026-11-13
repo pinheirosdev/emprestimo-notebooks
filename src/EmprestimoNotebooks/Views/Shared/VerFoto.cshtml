@@ -1,0 +1,12 @@
+@model EmprestimoNotebooks.Models.FotoPagina
+
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+
+<div class="titulo-acoes">
+    <h1>@Model.Titulo</h1>
+    <a class="botao botao-secundario" href="@Model.Voltar">Voltar</a>
+</div>
+
+<img class="foto-registro" src="@Model.Imagem" alt="@Model.Titulo">

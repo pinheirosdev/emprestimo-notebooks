@@ -9,8 +9,11 @@ public class RetiradaFormulario
     [Required(ErrorMessage = "Selecione um aluno cadastrado.")]
     public int? AlunoId { get; set; }
 
-    [Required(ErrorMessage = "Tire a foto da retirada.")]
+    [Required(ErrorMessage = "Tire a foto do aluno na retirada.")]
     public IFormFile? Foto { get; set; }
+
+    [Required(ErrorMessage = "Tire a foto do notebook na retirada.")]
+    public IFormFile? FotoNotebook { get; set; }
 
     public string? Busca { get; set; }
 

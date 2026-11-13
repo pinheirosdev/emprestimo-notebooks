@@ -33,6 +33,9 @@ namespace EmprestimoNotebooks.Dados.Migracoes
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("CadastradoEmUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<byte[]>("FotoJpeg")
                         .IsRequired()
                         .HasColumnType("BLOB");
@@ -70,12 +73,24 @@ namespace EmprestimoNotebooks.Dados.Migracoes
                     b.Property<DateTime?>("DevolvidoEmUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<byte[]>("FotoDevolucaoJpeg")
+                        .HasColumnType("BLOB");
+
+                    b.Property<byte[]>("FotoNotebookJpeg")
+                        .HasColumnType("BLOB");
+
+                    b.Property<byte[]>("FotoNotebookRetiradaJpeg")
+                        .HasColumnType("BLOB");
+
                     b.Property<byte[]>("FotoRetiradaJpeg")
                         .IsRequired()
                         .HasColumnType("BLOB");
 
                     b.Property<int>("NotebookId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ObservacaoDevolucao")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("RetiradoEmUtc")
                         .HasColumnType("TEXT");
@@ -91,11 +106,36 @@ namespace EmprestimoNotebooks.Dados.Migracoes
                     b.ToTable("Emprestimos");
                 });
 
+            modelBuilder.Entity("EmprestimoNotebooks.Dominio.ManutencaoNotebook", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AlteradoEmUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("EmManutencao")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NotebookId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotebookId");
+
+                    b.ToTable("ManutencoesNotebook");
+                });
+
             modelBuilder.Entity("EmprestimoNotebooks.Dominio.Notebook", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CadastradoEmUtc")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("EmManutencao")
                         .HasColumnType("INTEGER");
@@ -129,6 +169,15 @@ namespace EmprestimoNotebooks.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EmprestimoNotebooks.Dominio.Notebook", null)
+                        .WithMany()
+                        .HasForeignKey("NotebookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EmprestimoNotebooks.Dominio.ManutencaoNotebook", b =>
+                {
                     b.HasOne("EmprestimoNotebooks.Dominio.Notebook", null)
                         .WithMany()
                         .HasForeignKey("NotebookId")

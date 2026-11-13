@@ -7,4 +7,5 @@ public class Notebook
     public required string Marca { get; set; }
     public required string Modelo { get; set; }
     public bool EmManutencao { get; set; }
+    public DateTime? CadastradoEmUtc { get; set; }
 }
