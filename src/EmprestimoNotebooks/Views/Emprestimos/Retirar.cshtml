@@ -1,0 +1,84 @@
+@model EmprestimoNotebooks.Models.RetiradaFormulario
+
+@{
+    ViewData["Title"] = "Retirar notebook";
+}
+
+<h1>Retirar notebook</h1>
+<p class="notebook-retirada"><strong>@Model.Patrimonio</strong> · @Model.Marca @Model.Modelo</p>
+
+@if (Model.Indisponivel)
+{
+    if (ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+    {
+        <div asp-validation-summary="ModelOnly" role="alert"></div>
+    }
+    else
+    {
+        <p class="vazio" role="status">Este notebook está indisponível para retirada.</p>
+    }
+
+    <div class="formulario-acoes">
+        <a class="botao botao-secundario" asp-controller="Notebooks" asp-action="Index">Voltar ao inventário</a>
+    </div>
+}
+else
+{
+    <form class="busca-alunos" asp-action="Retirar" asp-route-id="@Model.NotebookId" method="get" role="search">
+        <div class="campo">
+            <label for="busca">Nome ou matrícula</label>
+            <input id="busca" name="busca" type="search" value="@Model.Busca">
+        </div>
+        <button class="botao botao-secundario" type="submit">Buscar</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Busca))
+        {
+            <a class="acao-tabela" asp-action="Retirar" asp-route-id="@Model.NotebookId">Limpar busca</a>
+        }
+    </form>
+
+    if (Model.Alunos.Count == 0)
+    {
+        <p class="vazio">@(string.IsNullOrWhiteSpace(Model.Busca) ? "Nenhum aluno cadastrado." : "Nenhum aluno encontrado.")</p>
+        <div class="formulario-acoes">
+            @if (string.IsNullOrWhiteSpace(Model.Busca))
+            {
+                <a class="botao" asp-controller="Alunos" asp-action="Cadastrar">Cadastrar aluno</a>
+            }
+            <a class="botao botao-secundario" asp-controller="Notebooks" asp-action="Index">Cancelar</a>
+        </div>
+    }
+    else
+    {
+        <form class="formulario" asp-action="Retirar" asp-route-id="@Model.NotebookId" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" role="alert"></div>
+            <input asp-for="Busca" type="hidden">
+
+            <div class="campo">
+                <label asp-for="AlunoId">Aluno</label>
+                <select asp-for="AlunoId" data-camera-aluno required aria-describedby="erro-aluno">
+                    <option value="">Selecione um aluno</option>
+                    @foreach (var aluno in Model.Alunos)
+                    {
+                        <option value="@aluno.Id">@aluno.NomeCompleto (@aluno.Matricula · @aluno.Turma)</option>
+                    }
+                </select>
+                <span asp-validation-for="AlunoId" id="erro-aluno"></span>
+            </div>
+
+            <partial name="_Camera" model='"Foto"' />
+            <partial name="_Camera" model='"FotoNotebook"' />
+
+            <div class="formulario-acoes">
+                <button class="botao" type="submit" disabled>Registrar retirada</button>
+                <a class="botao botao-secundario" asp-controller="Notebooks" asp-action="Index">Cancelar</a>
+            </div>
+        </form>
+    }
+}
+
+@section Scripts {
+    @if (!Model.Indisponivel && Model.Alunos.Count > 0)
+    {
+        <script src="~/js/camera.js" asp-append-version="true" defer></script>
+    }
+}

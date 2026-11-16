@@ -1,0 +1,38 @@
+@model EmprestimoNotebooks.Models.AlunoFormulario
+
+@{
+    ViewData["Title"] = "Cadastrar aluno";
+}
+
+<h1>Cadastrar aluno</h1>
+
+<form class="formulario" asp-action="Cadastrar" method="post" enctype="multipart/form-data">
+    <div class="campo">
+        <label asp-for="NomeCompleto"></label>
+        <input asp-for="NomeCompleto" autocomplete="off" required aria-describedby="erro-nome">
+        <span asp-validation-for="NomeCompleto" id="erro-nome"></span>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Matricula"></label>
+        <input asp-for="Matricula" autocomplete="off" spellcheck="false" required aria-describedby="erro-matricula">
+        <span asp-validation-for="Matricula" id="erro-matricula"></span>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Turma"></label>
+        <input asp-for="Turma" autocomplete="off" required aria-describedby="erro-turma">
+        <span asp-validation-for="Turma" id="erro-turma"></span>
+    </div>
+
+    <partial name="_Camera" model='"Foto"' />
+
+    <div class="formulario-acoes">
+        <button class="botao" type="submit" disabled>Salvar aluno</button>
+        <a class="botao botao-secundario" asp-action="Index">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/camera.js" asp-append-version="true" defer></script>
+}

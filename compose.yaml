@@ -1,0 +1,15 @@
+services:
+  notebooks:
+    build: .
+    ports:
+      - "127.0.0.1:${NOTEBOOKS_PORTA:-5180}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Atendente__Usuario: ${ATENDENTE_USUARIO:?Preencha ATENDENTE_USUARIO no arquivo .env}
+      Atendente__Senha: ${ATENDENTE_SENHA:?Preencha ATENDENTE_SENHA no arquivo .env}
+      ConnectionStrings__Emprestimos: "Data Source=/dados/emprestimos.db;Foreign Keys=True"
+    volumes:
+      - dados:/dados
+
+volumes:
+  dados:

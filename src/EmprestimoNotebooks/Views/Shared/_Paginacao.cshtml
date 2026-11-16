@@ -1,0 +1,44 @@
+@model EmprestimoNotebooks.Models.NavegacaoPagina
+
+@if (Model.TotalPaginas > 1)
+{
+    <nav class="paginacao" aria-label="@Model.Rotulo">
+        @if (Model.Atual > 1)
+        {
+            <a class="paginacao-seta" href="@Model.Link(Model.Atual - 1)" rel="prev" aria-label="Página anterior">‹</a>
+        }
+        else
+        {
+            <span class="paginacao-seta paginacao-inativa" aria-hidden="true">‹</span>
+        }
+
+        @{ var anterior = 0; }
+        @foreach (var numero in Model.Numeros())
+        {
+            if (numero > anterior + 1)
+            {
+                <span class="paginacao-reticencias" aria-hidden="true">…</span>
+            }
+
+            if (numero == Model.Atual)
+            {
+                <span class="paginacao-numero" aria-current="page" tabindex="-1"><span class="visualmente-oculto">Página </span>@numero</span>
+            }
+            else
+            {
+                <a class="paginacao-numero" href="@Model.Link(numero)" aria-label="Página @numero">@numero</a>
+            }
+
+            anterior = numero;
+        }
+
+        @if (Model.Atual < Model.TotalPaginas)
+        {
+            <a class="paginacao-seta" href="@Model.Link(Model.Atual + 1)" rel="next" aria-label="Próxima página">›</a>
+        }
+        else
+        {
+            <span class="paginacao-seta paginacao-inativa" aria-hidden="true">›</span>
+        }
+    </nav>
+}

@@ -1,0 +1,166 @@
+@model EmprestimoNotebooks.Models.HistoricoFormulario
+
+@{
+    ViewData["Title"] = "Histórico";
+
+    int? PaginaNaUrl(int pagina) => pagina > 1 ? pagina : null;
+
+    string? Link(int paginaAbertos, int paginaMovimentacoes, int paginaEventos) =>
+        Url.Action("Index", new
+        {
+            mes = Model.Mes,
+            paginaAbertos = PaginaNaUrl(paginaAbertos),
+            paginaMovimentacoes = PaginaNaUrl(paginaMovimentacoes),
+            paginaEventos = PaginaNaUrl(paginaEventos)
+        });
+
+    var abertos = Model.EmAberto;
+    var movimentos = Model.Movimentacoes;
+    var eventos = Model.Eventos;
+    var paginaAbertos = PaginaNaUrl(abertos.Atual);
+    var paginaMovimentacoes = PaginaNaUrl(movimentos.Atual);
+    var paginaEventos = PaginaNaUrl(eventos.Atual);
+
+    var navegacaoAbertos = new EmprestimoNotebooks.Models.NavegacaoPagina(abertos.Atual, abertos.TotalPaginas,
+        "Paginação dos empréstimos em aberto",
+        numero => Link(numero, movimentos.Atual, eventos.Atual));
+    var navegacaoMovimentos = new EmprestimoNotebooks.Models.NavegacaoPagina(movimentos.Atual, movimentos.TotalPaginas,
+        "Paginação das movimentações",
+        numero => Link(abertos.Atual, numero, eventos.Atual));
+    var navegacaoEventos = new EmprestimoNotebooks.Models.NavegacaoPagina(eventos.Atual, eventos.TotalPaginas,
+        "Paginação de cadastros e manutenção",
+        numero => Link(abertos.Atual, movimentos.Atual, numero));
+}
+
+<h1>Histórico</h1>
+
+<form class="busca-alunos filtro-mes" asp-action="Index" method="get">
+    <div class="campo">
+        <label for="mes">Mês</label>
+        <input id="mes" name="mes" type="month" value="@Model.Mes" placeholder="AAAA-MM" pattern="[0-9]{4}-[0-9]{2}" required>
+    </div>
+    <button class="botao botao-secundario" type="submit">Filtrar</button>
+</form>
+
+<section class="historico-secao" aria-labelledby="em-aberto" data-paginacao="paginaAbertos" data-pagina-atual="@abertos.Atual">
+    <h2 id="em-aberto">Empréstimos em aberto</h2>
+    @if (abertos.Itens.Count == 0)
+    {
+        <p class="vazio">Nenhum empréstimo em aberto.</p>
+    }
+    else
+    {
+        <table class="inventario tabela-historico">
+            <thead>
+                <tr>
+                    <th scope="col">Notebook</th>
+                    <th scope="col">Aluno</th>
+                    <th scope="col">Retirada</th>
+                    <th scope="col">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var emprestimo in abertos.Itens)
+                {
+                    <tr>
+                        <th scope="row">@emprestimo.Patrimonio</th>
+                        <td>@emprestimo.NomeCompleto <span class="historico-matricula">@emprestimo.Matricula</span></td>
+                        <td><time datetime="@emprestimo.RetiradoEmLocal.ToString("s")">@emprestimo.RetiradoEmLocal.ToString("dd/MM/yyyy HH:mm")</time></td>
+                        <td><a class="acao-tabela" asp-controller="Emprestimos" asp-action="Devolver" asp-route-id="@emprestimo.EmprestimoId" aria-label="Devolver notebook @emprestimo.Patrimonio">Devolver</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <partial name="_Paginacao" model="navegacaoAbertos" />
+    }
+</section>
+
+<section class="historico-secao" aria-labelledby="movimentacoes" data-paginacao="paginaMovimentacoes" data-pagina-atual="@movimentos.Atual">
+    <h2 id="movimentacoes">Movimentações de @Model.TituloMes</h2>
+    @if (movimentos.Itens.Count == 0)
+    {
+        <p class="vazio">Nenhuma movimentação no mês selecionado.</p>
+    }
+    else
+    {
+        <table class="inventario tabela-historico tabela-movimentacoes">
+            <thead>
+                <tr>
+                    <th scope="col">Notebook</th>
+                    <th scope="col">Aluno</th>
+                    <th scope="col">Data e hora</th>
+                    <th scope="col">Movimentação</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in movimentos.Itens)
+                {
+                    var tipo = item.Devolucao ? "devolucao" : "retirada";
+                    var tipoFotoNotebook = item.Devolucao ? "notebook" : "notebook-retirada";
+                    var acao = item.Devolucao ? "Devolução" : "Retirada";
+                    <tr>
+                        <th scope="row">@item.Patrimonio</th>
+                        <td>@item.NomeCompleto <span class="historico-matricula">@item.Matricula</span></td>
+                        <td><time datetime="@item.DataLocal.ToString("s")">@item.DataLocal.ToString("dd/MM/yyyy HH:mm")</time></td>
+                        <td>
+                            <div class="historico-movimentacao">
+                                <strong>@acao</strong>
+                                <div class="acoes-tabela">
+                                    <a class="acao-tabela" data-paginacao-retorno asp-action="VerFoto" asp-route-id="@item.EmprestimoId" asp-route-tipo="@tipo"
+                                       asp-route-mes="@Model.Mes" asp-route-paginaAbertos="@paginaAbertos" asp-route-paginaMovimentacoes="@paginaMovimentacoes"
+                                       asp-route-paginaEventos="@paginaEventos" aria-label="Foto do aluno na @acao.ToLowerInvariant() do notebook @item.Patrimonio">Foto do aluno</a>
+                                    @if (item.TemFotoNotebook)
+                                    {
+                                        <a class="acao-tabela" data-paginacao-retorno asp-action="VerFoto" asp-route-id="@item.EmprestimoId" asp-route-tipo="@tipoFotoNotebook"
+                                           asp-route-mes="@Model.Mes" asp-route-paginaAbertos="@paginaAbertos" asp-route-paginaMovimentacoes="@paginaMovimentacoes"
+                                           asp-route-paginaEventos="@paginaEventos" aria-label="Foto do notebook @item.Patrimonio na @acao.ToLowerInvariant()">Foto do notebook</a>
+                                    }
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(item.Observacao))
+                            {
+                                <p class="historico-observacao">@item.Observacao</p>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <partial name="_Paginacao" model="navegacaoMovimentos" />
+    }
+</section>
+
+<section class="historico-secao" aria-labelledby="cadastros-manutencao" data-paginacao="paginaEventos" data-pagina-atual="@eventos.Atual">
+    <h2 id="cadastros-manutencao">Cadastros e manutenção</h2>
+    @if (eventos.Itens.Count == 0)
+    {
+        <p class="vazio">Nenhum cadastro ou mudança de manutenção no mês selecionado.</p>
+    }
+    else
+    {
+        <table class="inventario tabela-eventos">
+            <thead>
+                <tr>
+                    <th scope="col">Data e hora</th>
+                    <th scope="col">Evento</th>
+                    <th scope="col">Registro</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var evento in eventos.Itens)
+                {
+                    <tr>
+                        <td><time datetime="@evento.DataLocal.ToString("s")">@evento.DataLocal.ToString("dd/MM/yyyy HH:mm")</time></td>
+                        <th scope="row">@evento.Descricao</th>
+                        <td>@evento.Referencia</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <partial name="_Paginacao" model="navegacaoEventos" />
+    }
+</section>
+
+@section Scripts {
+    <script src="~/js/paginacao.js" asp-append-version="true" defer></script>
+}

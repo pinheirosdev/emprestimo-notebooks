@@ -1,0 +1,70 @@
+@model EmprestimoNotebooks.Models.AlunosFormulario
+
+@{
+    ViewData["Title"] = "Alunos";
+    var busca = Model.Busca;
+    var alunos = Model.Alunos;
+    int? pagina = alunos.Atual > 1 ? alunos.Atual : null;
+    var navegacao = new EmprestimoNotebooks.Models.NavegacaoPagina(alunos.Atual, alunos.TotalPaginas,
+        "Paginação dos alunos",
+        numero => Url.Action("Index", new { busca, pagina = numero > 1 ? (int?)numero : null }));
+}
+
+<div class="titulo-acoes">
+    <h1>Alunos</h1>
+    <a class="botao" asp-action="Cadastrar">Cadastrar aluno</a>
+</div>
+
+@if (TempData["Mensagem"] is string mensagem)
+{
+    <p class="mensagem" role="status">@mensagem</p>
+}
+
+<form class="busca-alunos" asp-action="Index" method="get" role="search">
+    <div class="campo">
+        <label for="busca">Nome ou matrícula</label>
+        <input id="busca" name="busca" type="search" value="@busca">
+    </div>
+    <button class="botao botao-secundario" type="submit">Buscar</button>
+    @if (!string.IsNullOrWhiteSpace(busca))
+    {
+        <a class="acao-tabela" asp-action="Index">Limpar busca</a>
+    }
+</form>
+
+<div data-paginacao="pagina" data-pagina-atual="@alunos.Atual">
+@if (alunos.Itens.Count == 0)
+{
+    <p class="vazio">@(string.IsNullOrWhiteSpace(busca) ? "Nenhum aluno cadastrado." : "Nenhum aluno encontrado.")</p>
+}
+else
+{
+    <table class="inventario tabela-alunos">
+        <caption class="visualmente-oculto">Alunos cadastrados</caption>
+        <thead>
+            <tr>
+                <th scope="col">Nome completo</th>
+                <th scope="col">Matrícula</th>
+                <th scope="col">Turma</th>
+                <th scope="col">Foto</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var aluno in alunos.Itens)
+            {
+                <tr>
+                    <th scope="row">@aluno.NomeCompleto</th>
+                    <td>@aluno.Matricula</td>
+                    <td>@aluno.Turma</td>
+                    <td><a class="acao-tabela" asp-action="VerFoto" asp-route-id="@aluno.Id" asp-route-busca="@busca" asp-route-pagina="@pagina" aria-label="Ver foto de @aluno.NomeCompleto">Ver foto</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="_Paginacao" model="navegacao" />
+}
+</div>
+
+@section Scripts {
+    <script src="~/js/paginacao.js" asp-append-version="true" defer></script>
+}

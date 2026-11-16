@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/EmprestimoNotebooks/EmprestimoNotebooks.csproj" />
+  <Project Path="tests/EmprestimoNotebooks.Tests/EmprestimoNotebooks.Tests.csproj" />
+</Solution>

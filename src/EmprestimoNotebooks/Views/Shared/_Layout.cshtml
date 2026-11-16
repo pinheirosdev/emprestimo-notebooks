@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] | Empréstimo de Notebooks</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+</head>
+<body>
+    <a class="atalho" href="#conteudo">Ir para o conteúdo</a>
+    <header class="cabecalho">
+        <div class="largura cabecalho-conteudo">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                var pagina = ViewContext.RouteData.Values["controller"]?.ToString();
+                <a class="marca" asp-controller="Notebooks" asp-action="Index">Empréstimo de Notebooks</a>
+                <div class="cabecalho-acoes">
+                    <nav class="navegacao" aria-label="Navegação principal">
+                        <a asp-controller="Notebooks" asp-action="Index" aria-current="@(pagina is "Notebooks" or "Emprestimos" ? "location" : null)">Inventário</a>
+                        <a asp-controller="Alunos" asp-action="Index" aria-current="@(pagina == "Alunos" ? "location" : null)">Alunos</a>
+                        <a asp-controller="Historico" asp-action="Index" aria-current="@(pagina == "Historico" ? "page" : null)">Histórico</a>
+                    </nav>
+                    <form asp-controller="Atendente" asp-action="Sair" method="post">
+                        <button class="botao botao-secundario" type="submit">Sair</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <span class="marca">Empréstimo de Notebooks</span>
+            }
+        </div>
+    </header>
+    <main class="largura conteudo" id="conteudo" tabindex="-1">
+        @RenderBody()
+    </main>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

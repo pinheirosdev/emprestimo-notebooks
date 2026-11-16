@@ -1,0 +1,30 @@
+@model EmprestimoNotebooks.Models.EntrarFormulario
+
+@{
+    ViewData["Title"] = "Acesso do atendente";
+}
+
+<form class="formulario formulario-entrar" asp-action="Entrar" method="post">
+    <h1>Acesso do atendente</h1>
+    @if (ViewData.ModelState.TryGetValue(string.Empty, out var estado) && estado.Errors.Count > 0)
+    {
+        <div asp-validation-summary="ModelOnly" role="alert"></div>
+    }
+    <input asp-for="Retorno" type="hidden">
+
+    <div class="campo">
+        <label asp-for="Usuario"></label>
+        <input asp-for="Usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required aria-describedby="erro-usuario">
+        <span asp-validation-for="Usuario" id="erro-usuario"></span>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Senha"></label>
+        <input asp-for="Senha" type="password" autocomplete="current-password" required aria-describedby="erro-senha">
+        <span asp-validation-for="Senha" id="erro-senha"></span>
+    </div>
+
+    <div class="formulario-acoes">
+        <button class="botao" type="submit">Entrar</button>
+    </div>
+</form>

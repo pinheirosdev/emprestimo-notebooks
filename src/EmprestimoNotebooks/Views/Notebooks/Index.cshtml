@@ -1,0 +1,101 @@
+@model EmprestimoNotebooks.Models.InventarioFormulario
+
+@{
+    ViewData["Title"] = "Inventário de notebooks";
+    var notebooks = Model.Notebooks;
+    var navegacao = new EmprestimoNotebooks.Models.NavegacaoPagina(notebooks.Atual, notebooks.TotalPaginas,
+        "Paginação do inventário",
+        numero => Url.Action("Index", new { pagina = numero > 1 ? (int?)numero : null }));
+}
+
+<div class="titulo-acoes">
+    <h1>Inventário de notebooks</h1>
+    <a class="botao" asp-action="Cadastrar">Cadastrar notebook</a>
+</div>
+
+@if (TempData["Mensagem"] is string mensagem)
+{
+    <p class="mensagem" role="status">@mensagem</p>
+}
+
+<dl class="resumo">
+    <div>
+        <dt>Total</dt>
+        <dd>@notebooks.TotalItens</dd>
+    </div>
+    <div>
+        <dt>Disponíveis</dt>
+        <dd>@Model.Disponiveis</dd>
+    </div>
+    <div>
+        <dt>Emprestados</dt>
+        <dd>@Model.Emprestados</dd>
+    </div>
+    <div>
+        <dt>Em manutenção</dt>
+        <dd>@Model.EmManutencao</dd>
+    </div>
+</dl>
+
+<div data-paginacao="pagina" data-pagina-atual="@notebooks.Atual">
+@if (notebooks.Itens.Count == 0)
+{
+    <p class="vazio">Nenhum notebook cadastrado.</p>
+}
+else
+{
+    <table class="inventario tabela-notebooks">
+        <caption class="visualmente-oculto">Notebooks cadastrados</caption>
+        <thead>
+            <tr>
+                <th scope="col">Patrimônio</th>
+                <th scope="col">Marca e modelo</th>
+                <th scope="col">Situação</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var notebook in notebooks.Itens)
+            {
+                <tr>
+                    <th scope="row">@notebook.Patrimonio</th>
+                    <td>@notebook.Marca @notebook.Modelo</td>
+                    <td>
+                        @if (notebook.Emprestado)
+                        {
+                            <span class="situacao emprestado">Emprestado</span>
+                        }
+                        else if (notebook.EmManutencao)
+                        {
+                            <span class="situacao manutencao">Em manutenção</span>
+                        }
+                        else
+                        {
+                            <span class="situacao disponivel">Disponível</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="acoes-tabela">
+                            @if (notebook.EmprestimoAbertoId is int emprestimoId)
+                            {
+                                <a class="acao-tabela" asp-controller="Emprestimos" asp-action="Devolver" asp-route-id="@emprestimoId" aria-label="Devolver notebook @notebook.Patrimonio">Devolver</a>
+                            }
+                            else if (!notebook.EmManutencao)
+                            {
+                                <a class="acao-tabela" asp-controller="Emprestimos" asp-action="Retirar" asp-route-id="@notebook.Id" aria-label="Retirar notebook @notebook.Patrimonio">Retirar</a>
+                            }
+                            <a class="acao-tabela" asp-action="Editar" asp-route-id="@notebook.Id" aria-label="Editar notebook @notebook.Patrimonio">Editar</a>
+                            <a class="acao-tabela" asp-action="Excluir" asp-route-id="@notebook.Id" aria-label="Excluir notebook @notebook.Patrimonio">Excluir</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="_Paginacao" model="navegacao" />
+}
+</div>
+
+@section Scripts {
+    <script src="~/js/paginacao.js" asp-append-version="true" defer></script>
+}
