@@ -1,0 +1,26 @@
+@model EmprestimoNotebooks.Dominio.Notebook
+
+@{
+    ViewData["Title"] = "Excluir notebook";
+}
+
+<h1>Excluir notebook</h1>
+<p class="notebook-retirada"><strong>@Model.Patrimonio</strong> · @Model.Marca @Model.Modelo</p>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="ModelOnly" role="alert"></div>
+    <div class="formulario-acoes">
+        <a class="botao botao-secundario" asp-action="Index">Voltar ao inventário</a>
+    </div>
+}
+else
+{
+    <form class="formulario" asp-action="ConfirmarExclusao" asp-route-id="@Model.Id" method="post">
+        <p>O notebook será removido do inventário e o cadastro deixará de aparecer no histórico.</p>
+        <div class="formulario-acoes">
+            <button class="botao" type="submit">Confirmar exclusão</button>
+            <a class="botao botao-secundario" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+}

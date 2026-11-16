@@ -312,11 +312,10 @@ h1 {
 }
 
 .tabela-notebooks thead th:last-child {
-    width: 10.5rem;
+    width: 14rem;
 }
 
 .tabela-notebooks .acoes-tabela {
-    flex-wrap: nowrap;
     white-space: nowrap;
 }
 

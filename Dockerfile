@@ -1,11 +1,17 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
-WORKDIR /src
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS codigo
+WORKDIR /projeto
 
-COPY src/EmprestimoNotebooks/EmprestimoNotebooks.csproj ./
-RUN dotnet restore EmprestimoNotebooks.csproj
+COPY src/EmprestimoNotebooks/EmprestimoNotebooks.csproj src/EmprestimoNotebooks/
+RUN dotnet restore src/EmprestimoNotebooks/EmprestimoNotebooks.csproj
+COPY src/EmprestimoNotebooks/ src/EmprestimoNotebooks/
 
-COPY src/EmprestimoNotebooks/ ./
-RUN dotnet publish EmprestimoNotebooks.csproj --configuration Release --no-restore --output /app /p:UseAppHost=false
+FROM codigo AS testes
+COPY EmprestimoNotebooks.slnx ./
+COPY tests/EmprestimoNotebooks.Tests/ tests/EmprestimoNotebooks.Tests/
+RUN dotnet test EmprestimoNotebooks.slnx --nologo
+
+FROM codigo AS build
+RUN dotnet publish src/EmprestimoNotebooks/EmprestimoNotebooks.csproj --configuration Release --no-restore --output /app /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble
 WORKDIR /app

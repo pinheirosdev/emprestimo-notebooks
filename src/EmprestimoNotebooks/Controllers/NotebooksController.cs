@@ -59,6 +59,48 @@ public class NotebooksController(EmprestimosContexto contexto) : Controller
     public Task<IActionResult> Editar([FromRoute] int id, [FromForm] NotebookFormulario formulario, CancellationToken cancelamento)
         => Salvar(formulario, id, cancelamento);
 
+    [HttpGet("/notebooks/{id:int}/excluir")]
+    public async Task<IActionResult> Excluir([FromRoute] int id, CancellationToken cancelamento)
+    {
+        var semMovimentacoes = NotebooksSemMovimentacoes();
+        var resultado = await contexto.Notebooks.AsNoTracking()
+            .Where(notebook => notebook.Id == id)
+            .Select(notebook => new { Notebook = notebook, PodeExcluir = semMovimentacoes.Any(item => item.Id == notebook.Id) })
+            .SingleOrDefaultAsync(cancelamento);
+        if (resultado is null)
+        {
+            return NotFound();
+        }
+
+        if (!resultado.PodeExcluir)
+        {
+            Response.StatusCode = StatusCodes.Status409Conflict;
+            ModelState.AddModelError(string.Empty, "Este notebook tem empréstimos ou registros de manutenção. O cadastro foi preservado.");
+        }
+
+        return View(nameof(Excluir), resultado.Notebook);
+    }
+
+    [HttpPost("/notebooks/{id:int}/excluir")]
+    public async Task<IActionResult> ConfirmarExclusao([FromRoute] int id, CancellationToken cancelamento)
+    {
+        var excluidos = await NotebooksSemMovimentacoes()
+            .Where(notebook => notebook.Id == id)
+            .ExecuteDeleteAsync(cancelamento);
+        if (excluidos == 0)
+        {
+            return await Excluir(id, cancelamento);
+        }
+
+        TempData["Mensagem"] = "Notebook excluído.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private IQueryable<Notebook> NotebooksSemMovimentacoes() =>
+        contexto.Notebooks.Where(notebook =>
+            !contexto.Emprestimos.Any(emprestimo => emprestimo.NotebookId == notebook.Id)
+            && !contexto.ManutencoesNotebook.Any(manutencao => manutencao.NotebookId == notebook.Id));
+
     private async Task<IActionResult> Salvar(NotebookFormulario formulario, int? id, CancellationToken cancelamento)
     {
         formulario.Id = id;

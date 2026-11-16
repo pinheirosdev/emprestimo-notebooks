@@ -3,6 +3,10 @@
 !src/
 !src/EmprestimoNotebooks/
 !src/EmprestimoNotebooks/**
+!EmprestimoNotebooks.slnx
+!tests/
+!tests/EmprestimoNotebooks.Tests/
+!tests/EmprestimoNotebooks.Tests/**
 **/bin
 **/obj
 **/*.db
