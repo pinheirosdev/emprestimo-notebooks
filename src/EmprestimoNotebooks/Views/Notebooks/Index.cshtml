@@ -18,6 +18,8 @@
     <p class="mensagem" role="status">@mensagem</p>
 }
 
+<div asp-validation-summary="ModelOnly" role="alert"></div>
+
 <dl class="resumo">
     <div>
         <dt>Total</dt>
@@ -34,6 +36,10 @@
     <div>
         <dt>Em manutenção</dt>
         <dd>@Model.EmManutencao</dd>
+    </div>
+    <div>
+        <dt>Inativos</dt>
+        <dd>@Model.Inativos</dd>
     </div>
 </dl>
 
@@ -61,7 +67,11 @@ else
                     <th scope="row">@notebook.Patrimonio</th>
                     <td>@notebook.Marca @notebook.Modelo</td>
                     <td>
-                        @if (notebook.Emprestado)
+                        @if (!notebook.Ativo)
+                        {
+                            <span class="situacao inativo">Inativo</span>
+                        }
+                        else if (notebook.Emprestado)
                         {
                             <span class="situacao emprestado">Emprestado</span>
                         }
@@ -80,11 +90,15 @@ else
                             {
                                 <a class="acao-tabela" asp-controller="Emprestimos" asp-action="Devolver" asp-route-id="@emprestimoId" aria-label="Devolver notebook @notebook.Patrimonio">Devolver</a>
                             }
-                            else if (!notebook.EmManutencao)
+                            else if (notebook.Disponivel)
                             {
                                 <a class="acao-tabela" asp-controller="Emprestimos" asp-action="Retirar" asp-route-id="@notebook.Id" aria-label="Retirar notebook @notebook.Patrimonio">Retirar</a>
                             }
                             <a class="acao-tabela" asp-action="Editar" asp-route-id="@notebook.Id" aria-label="Editar notebook @notebook.Patrimonio">Editar</a>
+                            <form asp-action="@(notebook.Ativo ? "Inativar" : "Reativar")" asp-route-id="@notebook.Id" method="post">
+                                <input type="hidden" name="pagina" value="@notebooks.Atual" />
+                                <button class="acao-tabela" type="submit" aria-label="@(notebook.Ativo ? "Inativar" : "Reativar") notebook @notebook.Patrimonio">@(notebook.Ativo ? "Inativar" : "Reativar")</button>
+                            </form>
                             <a class="acao-tabela" asp-action="Excluir" asp-route-id="@notebook.Id" aria-label="Excluir notebook @notebook.Patrimonio">Excluir</a>
                         </div>
                     </td>

@@ -13,21 +13,25 @@ public class NotebooksController(EmprestimosContexto contexto) : Controller
     private const int RestricaoUnicaSqlite = 2067;
 
     [HttpGet("/")]
-    public async Task<IActionResult> Index(int pagina, CancellationToken cancelamento)
+    public Task<IActionResult> Index(int pagina, CancellationToken cancelamento)
+        => MostrarInventario(pagina, cancelamento);
+
+    private async Task<IActionResult> MostrarInventario(int pagina, CancellationToken cancelamento)
     {
         var notebooks = await contexto.Notebooks
             .AsNoTracking()
             .OrderBy(notebook => notebook.Patrimonio)
             .Select(notebook => new NotebookResumo(notebook.Id, notebook.Patrimonio, notebook.Marca, notebook.Modelo,
-                notebook.EmManutencao, contexto.EmprestimosAbertos.Where(emprestimo => emprestimo.NotebookId == notebook.Id)
+                notebook.Ativo, notebook.EmManutencao, contexto.EmprestimosAbertos.Where(emprestimo => emprestimo.NotebookId == notebook.Id)
                     .Select(emprestimo => (int?)emprestimo.Id).FirstOrDefault()))
             .ToListAsync(cancelamento);
 
-        var emprestados = notebooks.Count(notebook => notebook.Emprestado);
-        var emManutencao = notebooks.Count(notebook => !notebook.Emprestado && notebook.EmManutencao);
-        var disponiveis = notebooks.Count - emprestados - emManutencao;
-        return View(new InventarioFormulario(Pagina<NotebookResumo>.Criar(notebooks, pagina, 10),
-            disponiveis, emprestados, emManutencao));
+        var emprestados = notebooks.Count(notebook => notebook.Ativo && notebook.Emprestado);
+        var emManutencao = notebooks.Count(notebook => notebook.Ativo && !notebook.Emprestado && notebook.EmManutencao);
+        var disponiveis = notebooks.Count(notebook => notebook.Disponivel);
+        var inativos = notebooks.Count(notebook => !notebook.Ativo);
+        return View(nameof(Index), new InventarioFormulario(Pagina<NotebookResumo>.Criar(notebooks, pagina, 10),
+            disponiveis, emprestados, emManutencao, inativos));
     }
 
     [HttpGet("/notebooks/cadastrar")]
@@ -58,6 +62,39 @@ public class NotebooksController(EmprestimosContexto contexto) : Controller
     [HttpPost("/notebooks/{id:int}/editar")]
     public Task<IActionResult> Editar([FromRoute] int id, [FromForm] NotebookFormulario formulario, CancellationToken cancelamento)
         => Salvar(formulario, id, cancelamento);
+
+    [HttpPost("/notebooks/{id:int}/inativar")]
+    public Task<IActionResult> Inativar([FromRoute] int id, int pagina, CancellationToken cancelamento)
+        => AlterarAtividade(id, false, pagina, cancelamento);
+
+    [HttpPost("/notebooks/{id:int}/reativar")]
+    public Task<IActionResult> Reativar([FromRoute] int id, int pagina, CancellationToken cancelamento)
+        => AlterarAtividade(id, true, pagina, cancelamento);
+
+    private async Task<IActionResult> AlterarAtividade(int id, bool ativo, int pagina, CancellationToken cancelamento)
+    {
+        var notebooks = contexto.Notebooks.Where(notebook => notebook.Id == id);
+        if (!ativo)
+        {
+            notebooks = notebooks.Where(notebook => !contexto.EmprestimosAbertos.Any(emprestimo => emprestimo.NotebookId == notebook.Id));
+        }
+
+        var alterados = await notebooks.ExecuteUpdateAsync(campos => campos.SetProperty(notebook => notebook.Ativo, ativo), cancelamento);
+        if (alterados == 0)
+        {
+            if (!await contexto.Notebooks.AnyAsync(notebook => notebook.Id == id, cancelamento))
+            {
+                return NotFound();
+            }
+
+            Response.StatusCode = StatusCodes.Status409Conflict;
+            ModelState.AddModelError(string.Empty, "Devolva o notebook antes de inativá-lo.");
+            return await MostrarInventario(pagina, cancelamento);
+        }
+
+        TempData["Mensagem"] = ativo ? "Notebook reativado." : "Notebook inativado.";
+        return RedirectToAction(nameof(Index), new { pagina = pagina > 1 ? (int?)pagina : null });
+    }
 
     [HttpGet("/notebooks/{id:int}/excluir")]
     public async Task<IActionResult> Excluir([FromRoute] int id, CancellationToken cancelamento)

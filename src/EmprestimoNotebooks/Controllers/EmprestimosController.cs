@@ -38,7 +38,7 @@ public class EmprestimosController(EmprestimosContexto contexto) : Controller
             INSERT INTO "Emprestimos" ("NotebookId", "AlunoId", "RetiradoEmUtc", "FotoRetiradaJpeg", "FotoNotebookRetiradaJpeg")
             SELECT "Id", {alunoId}, {DateTime.UtcNow}, {fotoAluno}, {fotoNotebook}
             FROM "Notebooks"
-            WHERE "Id" = {id} AND "EmManutencao" = 0
+            WHERE "Id" = {id} AND "Ativo" = 1 AND "EmManutencao" = 0
             ON CONFLICT ("NotebookId") WHERE "DevolvidoEmUtc" IS NULL DO NOTHING
             """, cancelamento);
 
@@ -138,7 +138,7 @@ public class EmprestimosController(EmprestimosContexto contexto) : Controller
     private async Task<IActionResult> MostrarRetirada(int id, RetiradaFormulario formulario, CancellationToken cancelamento, bool conflito = false)
     {
         var notebook = await contexto.Notebooks.AsNoTracking().Where(item => item.Id == id)
-            .Select(item => new NotebookResumo(item.Id, item.Patrimonio, item.Marca, item.Modelo, item.EmManutencao,
+            .Select(item => new NotebookResumo(item.Id, item.Patrimonio, item.Marca, item.Modelo, item.Ativo, item.EmManutencao,
                 contexto.EmprestimosAbertos.Where(emprestimo => emprestimo.NotebookId == item.Id)
                     .Select(emprestimo => (int?)emprestimo.Id).FirstOrDefault()))
             .SingleOrDefaultAsync(cancelamento);
@@ -152,12 +152,13 @@ public class EmprestimosController(EmprestimosContexto contexto) : Controller
         formulario.Marca = notebook.Marca;
         formulario.Modelo = notebook.Modelo;
         formulario.Busca = formulario.Busca?.Trim();
-        formulario.Indisponivel = notebook.Emprestado || notebook.EmManutencao;
+        formulario.Indisponivel = !notebook.Disponivel;
 
         if (conflito || formulario.Indisponivel)
         {
             Response.StatusCode = StatusCodes.Status409Conflict;
-            var mensagem = notebook.EmManutencao ? "Este notebook está em manutenção."
+            var mensagem = !notebook.Ativo ? "Este notebook está inativo."
+                : notebook.EmManutencao ? "Este notebook está em manutenção."
                 : notebook.Emprestado ? "Este notebook já está emprestado."
                 : "A disponibilidade do notebook mudou. Tente novamente.";
             ModelState.AddModelError(string.Empty, mensagem);
