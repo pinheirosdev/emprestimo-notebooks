@@ -17,16 +17,6 @@ namespace EmprestimoNotebooks.Dados.Migracoes
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.15");
 
-            modelBuilder.Entity("EmprestimoNotebooks.Dados.ControleCarga", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ControleCarga", (string)null);
-                });
-
             modelBuilder.Entity("EmprestimoNotebooks.Dominio.Aluno", b =>
                 {
                     b.Property<int>("Id")

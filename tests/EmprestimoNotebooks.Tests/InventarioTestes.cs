@@ -1,6 +1,9 @@
 using System.Net;
 using EmprestimoNotebooks.Dados;
+using EmprestimoNotebooks.Dominio;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using static EmprestimoNotebooks.Tests.AplicacaoDeTeste;
@@ -12,6 +15,28 @@ public class InventarioTestes : IDisposable
     private const string Cadastro = "/notebooks/cadastrar";
 
     private readonly string _caminhoDoBanco = Path.Combine(Path.GetTempPath(), $"notebooks-testes-{Guid.NewGuid():N}.db");
+
+    [Fact]
+    public async Task BancoNovoIniciaSemCadastrosOuMovimentacoes()
+    {
+        var cancelamento = TestContext.Current.CancellationToken;
+        await using var aplicacao = new AplicacaoDeTeste(_caminhoDoBanco, cadastrarNotebooks: false);
+        using var cliente = aplicacao.CriarCliente();
+        using var login = await EntrarAsync(cliente);
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        using var escopo = aplicacao.Services.CreateScope();
+        var banco = escopo.ServiceProvider.GetRequiredService<EmprestimosContexto>();
+
+        Assert.NotEmpty(await banco.Database.GetAppliedMigrationsAsync(cancelamento));
+        Assert.Empty(await banco.Database.GetPendingMigrationsAsync(cancelamento));
+        Assert.False(await banco.Notebooks.AnyAsync(cancelamento));
+        Assert.False(await banco.Alunos.AnyAsync(cancelamento));
+        Assert.False(await banco.Emprestimos.AnyAsync(cancelamento));
+        Assert.False(await banco.ManutencoesNotebook.AnyAsync(cancelamento));
+        var inventario = WebUtility.HtmlDecode(await cliente.GetStringAsync("/", cancelamento));
+        Assert.Contains("Nenhum notebook cadastrado.", inventario);
+        Assert.Contains("Cadastrar notebook", inventario);
+    }
 
     [Fact]
     public async Task PaginaInicialListaNotebooksDisponiveisEEmManutencao()
@@ -30,33 +55,92 @@ public class InventarioTestes : IDisposable
     }
 
     [Fact]
-    public async Task ReinicioPreservaEdicaoEExclusaoDaCargaDemonstrativa()
+    public async Task ReinicioPreservaCadastrosEdicoesEExclusoes()
     {
         var cancelamento = TestContext.Current.CancellationToken;
 
-        await using (var aplicacao = new AplicacaoDeTeste(_caminhoDoBanco))
+        await using (var aplicacao = new AplicacaoDeTeste(_caminhoDoBanco, cadastrarNotebooks: false))
         {
+            using var cliente = aplicacao.CriarCliente();
+            using var login = await EntrarAsync(cliente);
+            Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+            foreach (var patrimonio in new[] { "NOVO-001", "NOVO-002" })
+            {
+                using var cadastro = await EnviarFormularioAsync(cliente, Cadastro, Cadastro, CamposDoNotebook(patrimonio));
+                Assert.Equal(HttpStatusCode.Redirect, cadastro.StatusCode);
+            }
+
             using var escopo = aplicacao.Services.CreateScope();
             var banco = escopo.ServiceProvider.GetRequiredService<EmprestimosContexto>();
             var notebooks = await banco.Notebooks.OrderBy(notebook => notebook.Patrimonio).ToListAsync(cancelamento);
 
-            Assert.NotEmpty(await banco.Database.GetAppliedMigrationsAsync(cancelamento));
-            Assert.Equal(6, notebooks.Count);
-
-            notebooks[0].Modelo = "Modelo atualizado";
-            banco.Notebooks.Remove(notebooks[1]);
-            await banco.SaveChangesAsync(cancelamento);
+            var campos = CamposDoNotebook(notebooks[0].Patrimonio);
+            campos["Modelo"] = "Modelo atualizado";
+            var edicao = $"/notebooks/{notebooks[0].Id}/editar";
+            using var alteracao = await EnviarFormularioAsync(cliente, edicao, edicao, campos);
+            using var exclusao = await EnviarFormularioAsync(cliente, "/", $"/notebooks/{notebooks[1].Id}/excluir", []);
+            Assert.Equal(HttpStatusCode.Redirect, alteracao.StatusCode);
+            Assert.Equal(HttpStatusCode.Redirect, exclusao.StatusCode);
         }
 
-        await using var aplicacaoReiniciada = new AplicacaoDeTeste(_caminhoDoBanco);
+        await using var aplicacaoReiniciada = new AplicacaoDeTeste(_caminhoDoBanco, cadastrarNotebooks: false);
         using var escopoReiniciado = aplicacaoReiniciada.Services.CreateScope();
         var bancoReiniciado = escopoReiniciado.ServiceProvider.GetRequiredService<EmprestimosContexto>();
         var notebooksPersistidos = await bancoReiniciado.Notebooks.ToListAsync(cancelamento);
 
         Assert.Empty(await bancoReiniciado.Database.GetPendingMigrationsAsync(cancelamento));
-        Assert.Equal(5, notebooksPersistidos.Count);
-        Assert.Contains(notebooksPersistidos, notebook => notebook.Patrimonio == "NB-001" && notebook.Modelo == "Modelo atualizado");
-        Assert.DoesNotContain(notebooksPersistidos, notebook => notebook.Patrimonio == "NB-002");
+        var persistido = Assert.Single(notebooksPersistidos);
+        Assert.Equal("NOVO-001", persistido.Patrimonio);
+        Assert.Equal("Modelo atualizado", persistido.Modelo);
+    }
+
+    [Fact]
+    public async Task RemoverControleDeCargaPreservaCadastrosHistoricoEFotos()
+    {
+        var cancelamento = TestContext.Current.CancellationToken;
+        var opcoes = new DbContextOptionsBuilder<EmprestimosContexto>()
+            .UseSqlite($"Data Source={_caminhoDoBanco};Pooling=False").Options;
+        await using var banco = new EmprestimosContexto(opcoes);
+        var migrador = banco.GetService<IMigrator>();
+        await migrador.MigrateAsync("20261119044906_AdicionarAtividadeDoNotebook", cancelamento);
+        await banco.Database.ExecuteSqlRawAsync("INSERT INTO ControleCarga (Id) VALUES ('demonstracao')", cancelamento);
+
+        var foto = Convert.FromBase64String(FotosDeTeste.JpegSintetico);
+        var notebook = new Notebook { Patrimonio = "LEGADO-001", Marca = "Dell", Modelo = "Latitude", Ativo = false };
+        var aluno = new Aluno { NomeCompleto = "Ana Lima", Matricula = "LEGADO-001", Turma = "Turma 1", FotoJpeg = foto };
+        banco.AddRange(notebook, aluno);
+        await banco.SaveChangesAsync(cancelamento);
+        banco.Emprestimos.Add(new Emprestimo
+        {
+            NotebookId = notebook.Id,
+            AlunoId = aluno.Id,
+            RetiradoEmUtc = DateTime.UtcNow.AddMinutes(-2),
+            DevolvidoEmUtc = DateTime.UtcNow.AddMinutes(-1),
+            FotoRetiradaJpeg = foto,
+            FotoDevolucaoJpeg = foto
+        });
+        banco.ManutencoesNotebook.Add(new ManutencaoNotebook
+        {
+            NotebookId = notebook.Id,
+            AlteradoEmUtc = DateTime.UtcNow,
+            EmManutencao = true
+        });
+        await banco.SaveChangesAsync(cancelamento);
+
+        await migrador.MigrateAsync(cancellationToken: cancelamento);
+
+        var notebookPreservado = await banco.Notebooks.AsNoTracking().SingleAsync(cancelamento);
+        Assert.Equal("LEGADO-001", notebookPreservado.Patrimonio);
+        Assert.False(notebookPreservado.Ativo);
+        Assert.Equal(foto, (await banco.Alunos.AsNoTracking().SingleAsync(cancelamento)).FotoJpeg);
+        var emprestimo = await banco.Emprestimos.AsNoTracking().SingleAsync(cancelamento);
+        Assert.Equal(foto, emprestimo.FotoRetiradaJpeg);
+        Assert.Equal(foto, emprestimo.FotoDevolucaoJpeg);
+        Assert.True((await banco.ManutencoesNotebook.AsNoTracking().SingleAsync(cancelamento)).EmManutencao);
+        Assert.Empty(await banco.Database.GetPendingMigrationsAsync(cancelamento));
+        var tabelasDeCarga = await banco.Database.SqlQueryRaw<int>(
+            "SELECT COUNT(*) AS Value FROM sqlite_master WHERE type = 'table' AND name = 'ControleCarga'").SingleAsync(cancelamento);
+        Assert.Equal(0, tabelasDeCarga);
     }
 
     [Fact]

@@ -28,7 +28,5 @@ public class EmprestimosContexto(DbContextOptions<EmprestimosContexto> opcoes) :
 
         modelo.Entity<ManutencaoNotebook>().HasOne<Notebook>().WithMany()
             .HasForeignKey(item => item.NotebookId).OnDelete(DeleteBehavior.Restrict);
-
-        modelo.Entity<ControleCarga>().ToTable("ControleCarga");
     }
 }
