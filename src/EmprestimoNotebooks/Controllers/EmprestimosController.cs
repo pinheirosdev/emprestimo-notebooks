@@ -39,11 +39,22 @@ public class EmprestimosController(EmprestimosContexto contexto) : Controller
             SELECT "Id", {alunoId}, {DateTime.UtcNow}, {fotoAluno}, {fotoNotebook}
             FROM "Notebooks"
             WHERE "Id" = {id} AND "Ativo" = 1 AND "EmManutencao" = 0
+                AND NOT EXISTS (
+                    SELECT 1 FROM "Emprestimos"
+                    WHERE "AlunoId" = {alunoId} AND "DevolvidoEmUtc" IS NULL)
             ON CONFLICT ("NotebookId") WHERE "DevolvidoEmUtc" IS NULL DO NOTHING
             """, cancelamento);
 
         if (registros == 0)
         {
+            if (await contexto.EmprestimosAbertos.AnyAsync(emprestimo => emprestimo.AlunoId == alunoId, cancelamento))
+            {
+                Response.StatusCode = StatusCodes.Status409Conflict;
+                ModelState.AddModelError(nameof(formulario.AlunoId),
+                    "Este aluno já tem um notebook emprestado. Registre a devolução antes de uma nova retirada.");
+                return await MostrarRetirada(id, formulario, cancelamento);
+            }
+
             return await MostrarRetirada(id, formulario, cancelamento, conflito: true);
         }
 
