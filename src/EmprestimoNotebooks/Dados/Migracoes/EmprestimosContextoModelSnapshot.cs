@@ -134,6 +134,9 @@ namespace EmprestimoNotebooks.Dados.Migracoes
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("CadastradoEmUtc")
                         .HasColumnType("TEXT");
 

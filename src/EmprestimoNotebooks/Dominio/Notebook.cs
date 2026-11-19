@@ -6,6 +6,7 @@ public class Notebook
     public required string Patrimonio { get; set; }
     public required string Marca { get; set; }
     public required string Modelo { get; set; }
+    public bool Ativo { get; set; } = true;
     public bool EmManutencao { get; set; }
     public DateTime? CadastradoEmUtc { get; set; }
 }

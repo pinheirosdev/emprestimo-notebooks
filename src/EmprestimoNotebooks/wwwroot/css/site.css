@@ -157,7 +157,11 @@ h1 {
 
 .acao-tabela {
     min-width: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: #243874;
+    cursor: pointer;
     text-decoration: underline;
     text-underline-offset: .2em;
 }
@@ -173,7 +177,7 @@ h1 {
 
 .resumo {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: clamp(.375rem, 2vw, 1rem);
     margin: 0 0 1.5rem;
 }
@@ -312,7 +316,7 @@ h1 {
 }
 
 .tabela-notebooks thead th:last-child {
-    width: 14rem;
+    width: 34%;
 }
 
 .tabela-notebooks .acoes-tabela {
@@ -341,6 +345,11 @@ h1 {
 .manutencao {
     background: #fff0d6;
     color: #724909;
+}
+
+.inativo {
+    background: #e9edf2;
+    color: #495870;
 }
 
 .vazio {
@@ -583,6 +592,10 @@ h1 {
 .validation-summary-errors ul {
     margin: 0;
     padding-inline-start: 1.25rem;
+}
+
+.validation-summary-errors + .resumo {
+    margin-top: 1.5rem;
 }
 
 .visualmente-oculto {
