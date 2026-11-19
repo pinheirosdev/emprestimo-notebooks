@@ -17,7 +17,7 @@ Aplicação web para controlar a retirada e a devolução de notebooks emprestad
 1. Entrar e sair da conta de atendente.
 2. Cadastrar, consultar e editar notebooks, alterar a manutenção e inativar ou reativar equipamentos sem perder o histórico. A inativação exige que não haja empréstimo em aberto; a exclusão só é permitida sem empréstimos ou registros de manutenção.
 3. Cadastrar alunos com nome, matrícula, turma e foto. Buscar por nome ou matrícula.
-4. Registrar a retirada com uma foto do aluno e outra do notebook. O sistema bloqueia a retirada de equipamentos inativos, em manutenção ou já emprestados.
+4. Registrar a retirada com uma foto do aluno e outra do notebook. Permitir apenas um empréstimo aberto por aluno e por notebook, com equipamento ativo e fora de manutenção.
 5. Registrar a devolução com novas fotos do aluno e do notebook e uma observação opcional.
 6. Consultar empréstimos em aberto e o histórico mensal de retiradas, devoluções, cadastros e mudanças de manutenção.
 
@@ -49,7 +49,7 @@ Com o Docker aberto, execute na raiz do repositório:
 docker build --target testes --progress plain --output=type=cacheonly .
 ```
 
-O Docker executa a suíte com o SDK do .NET 10 em uma etapa própria. Os testes de integração usam um SQLite temporário. A suíte cobre login, inventário, inativação e reativação, cadastro de alunos, fotos, retirada, devolução, histórico e paginação. Os testes também verificam que duas retiradas simultâneas geram apenas um empréstimo e que uma retirada concorrente com a inativação não deixa um notebook inativo com empréstimo aberto.
+O Docker executa a suíte com o SDK do .NET 10 em uma etapa própria. Os testes de integração usam um SQLite temporário. A suíte cobre login, inventário, inativação e reativação, cadastro de alunos, fotos, retirada, devolução, histórico e paginação. Os testes também verificam que duas retiradas simultâneas para o mesmo notebook ou aluno geram apenas um empréstimo. A devolução libera uma nova retirada. Uma retirada concorrente com a inativação não deixa um notebook inativo com empréstimo aberto.
 
 ## Estrutura
 
