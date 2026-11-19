@@ -75,4 +75,4 @@ O [relatório do projeto em PDF](docs/documentacao.pdf) reúne os requisitos, os
 | Entrega | Vídeo |
 | --- | --- |
 | Projeto de Desenvolvimento de Software I - Documentação | https://youtu.be/vhbASily-ao |
-| Projeto de Desenvolvimento de Software II - Demonstração do sistema |  |
+| Projeto de Desenvolvimento de Software II - Demonstração do sistema | https://youtu.be/I1quIEq0gIY |
