@@ -39,7 +39,7 @@ docker compose up --build -d
 
 Abra [http://127.0.0.1:5180](http://127.0.0.1:5180/) e entre com as credenciais do `.env`. Para tirar fotos, permita o acesso à câmera no navegador.
 
-Na primeira execução, a aplicação cria o banco e carrega seis notebooks de demonstração. Para parar a aplicação e manter os dados, execute `docker compose down`.
+Na primeira execução, a aplicação cria o banco vazio. Cadastre os notebooks e os alunos pelas telas do sistema. Para parar a aplicação e manter os dados, execute `docker compose down`.
 
 ## Testes
 

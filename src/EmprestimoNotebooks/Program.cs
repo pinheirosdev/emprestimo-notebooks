@@ -26,9 +26,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization(opcoes =>
     opcoes.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
-builder.Services.AddDbContext<EmprestimosContexto>(opcoes => opcoes
-    .UseSqlite(conexao)
-    .UseSeeding((contexto, _) => DadosDemonstracao.Inserir(contexto)));
+builder.Services.AddDbContext<EmprestimosContexto>(opcoes => opcoes.UseSqlite(conexao));
 
 var app = builder.Build();
 

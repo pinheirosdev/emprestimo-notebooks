@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using EmprestimoNotebooks.Dados;
+using EmprestimoNotebooks.Dominio;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -15,7 +16,8 @@ using static EmprestimoNotebooks.Tests.FotosDeTeste;
 
 namespace EmprestimoNotebooks.Tests;
 
-internal class AplicacaoDeTeste(string caminhoDoBanco, IInterceptor? interceptador = null) : WebApplicationFactory<EmprestimosContexto>
+internal class AplicacaoDeTeste(string caminhoDoBanco, IInterceptor? interceptador = null, bool cadastrarNotebooks = true)
+    : WebApplicationFactory<EmprestimosContexto>
 {
     internal const string CampoToken = "__RequestVerificationToken";
     private const string UsuarioDeTeste = "atendente.teste";
@@ -85,6 +87,7 @@ internal class AplicacaoDeTeste(string caminhoDoBanco, IInterceptor? interceptad
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
+        var bancoNovo = !File.Exists(caminhoDoBanco);
         var conexao = new SqliteConnectionStringBuilder
         {
             DataSource = caminhoDoBanco,
@@ -99,6 +102,21 @@ internal class AplicacaoDeTeste(string caminhoDoBanco, IInterceptor? interceptad
                 ["Atendente:Senha"] = SenhaDeTeste
             }));
 
-        return base.CreateHost(builder);
+        var host = base.CreateHost(builder);
+        if (cadastrarNotebooks && bancoNovo)
+        {
+            using var escopo = host.Services.CreateScope();
+            var banco = escopo.ServiceProvider.GetRequiredService<EmprestimosContexto>();
+            banco.Notebooks.AddRange(
+                new Notebook { Patrimonio = "NB-001", Marca = "Dell", Modelo = "Latitude 3420" },
+                new Notebook { Patrimonio = "NB-002", Marca = "Dell", Modelo = "Latitude 3420" },
+                new Notebook { Patrimonio = "NB-003", Marca = "Lenovo", Modelo = "ThinkPad E14" },
+                new Notebook { Patrimonio = "NB-004", Marca = "Lenovo", Modelo = "ThinkPad E14" },
+                new Notebook { Patrimonio = "NB-005", Marca = "HP", Modelo = "ProBook 440" },
+                new Notebook { Patrimonio = "NB-006", Marca = "HP", Modelo = "ProBook 440", EmManutencao = true });
+            banco.SaveChanges();
+        }
+
+        return host;
     }
 }
