@@ -23,9 +23,11 @@ Aplicação web para controlar a retirada e a devolução de notebooks emprestad
 
 ## Como rodar
 
-O Docker usa a imagem do SDK do .NET 10 para compilar o projeto e a imagem do ASP.NET Core para executar a aplicação. Para rodar dessa forma, basta ter o Docker com Compose instalado. No Windows, abra o Docker Desktop e execute na raiz do repositório, no PowerShell:
+O Docker usa a imagem do SDK do .NET 10 para compilar o projeto e a imagem do ASP.NET Core para executar a aplicação. Para rodar dessa forma, tenha o Git e o Docker com Compose instalados. No Windows, abra o Docker Desktop e, em uma pasta de sua preferência, execute no PowerShell:
 
 ```powershell
+git clone https://github.com/pinheirosdev/emprestimo-notebooks.git
+cd emprestimo-notebooks
 Copy-Item .env.example .env
 ```
 
@@ -67,3 +69,10 @@ tests/EmprestimoNotebooks.Tests/
 ## Documentação
 
 O [relatório do projeto em PDF](docs/documentacao.pdf) reúne os requisitos, os casos de uso e os diagramas.
+
+## Vídeos de defesa
+
+| Entrega | Vídeo |
+| --- | --- |
+| Projeto de Desenvolvimento de Software I - Documentação |  |
+| Projeto de Desenvolvimento de Software II - Demonstração do sistema |  |
